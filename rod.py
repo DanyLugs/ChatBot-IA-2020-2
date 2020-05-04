@@ -1,371 +1,315 @@
 #----------------------------------------------------------------------
-#  rod.py
+#  chatbot.py
 #
-#  un chatbot asistente de compras creado por Daniel Lugo
-#  actualizado por Ramón Arenas
-#  refinamiento por Oscar Fernando Millán
+#  Una implementación sencilla de un chatbot
+#  basado en intents y expresiones regulares
+#  por: Arenas Ayala Ramón, Lugo Cano Daniel y Millán Pimentel Óscar Fernando
 #----------------------------------------------------------------------
 
 import string
 import re
 import random
+from random import randrange
 
-class rod:
-  def __init__(self):
-    self.keys = list(map(lambda x:re.compile(x[0], re.IGNORECASE),gPats))
-    self.values = list(map(lambda x:x[1],gPats))
+class chatbot:
+    def __init__(self):
+        '''
+        El chatbot consta de una base de conocimiento representada como una lista de casos o intents
 
-  #----------------------------------------------------------------------
-  # translate: take a string, replace any words found in dict.keys()
-  #  with the corresponding dict.values()
-  #----------------------------------------------------------------------
-  def translate(self,str,dict):
-    words = str.lower().split()
-    keys = dict.keys();
-    for i in range(0,len(words)):
-      if words[i] in keys:
-        words[i] = dict[words[i]]
-    return ' '.join(words)
+        '''
+        self.conocimiento = [] # la base de conocimiento, representan los diferentes casos o intents
+        for caso in conocimiento:
+            caso['regex'] = list(map(lambda x:re.compile(x, re.IGNORECASE), caso['regex'])) # compilar las expresiones regulares es óptimo cuando se usan varias veces
+            self.conocimiento.append(caso)
+        # self.regexp_match
 
-  #----------------------------------------------------------------------
-  #  respond: take a string, a set of regexps, and a corresponding
-  #    set of response lists; find a match, and return a randomly
-  #    chosen response from the corresponding list.
-  #----------------------------------------------------------------------
-  def respond(self,str):
-    # find a match among keys
-    for i in range(0, len(self.keys)):
-      match = self.keys[i].match(str)
-      if match:
-        # found a match ... stuff with corresponding value
-        # chosen randomly from among the available options
-        resp = random.choice(self.values[i])
-        # we've got a response... stuff in reflected text where indicated
-        pos = resp.find('%')
-        while pos > -1:
-          num = int(resp[pos+1:pos+2])
-          resp = resp[:pos] + \
-            self.translate(match.group(num),gReflections) + \
-            resp[pos+2:]
-          pos = resp.find('%')
-        # fix munged punctuation at the end
-        if resp[-2:] == '?.': resp = resp[:-2] + '.'
-        if resp[-2:] == '??': resp = resp[:-2] + '?'
-        return resp
+    def responder(self, user_input):
+        '''
+        Flujo básico para identificar coincidencias de intents para responder al usuario.
+        Con el texto del usuario como parámetro, los paso a realizarse son:
+        1. Encontrar el caso de la base de conocimiento usando expresiones regulares
+        2. Si es necesario, realizar acciones asociadas al intent (por ejemplo: consultar información adicional)
+        3. Seleccionar una respuesta de la lista de respuestas según el caso del intent
+        4. Si es necesario, identificar los parámetros o entidades del texto para dar formato a la respuesta seleccionada
+        5. Devolver la respuesta
 
-#----------------------------------------------------------------------
-# gReflections, a translation table used to convert things you say
-#    into things the computer says back, e.g. "I am" --> "you are"
-#----------------------------------------------------------------------
-gReflections = {
-  "am"   : "are",
-  "was"  : "were",
-  "i"    : "you",
-  "i'd"  : "you would",
-  "i've"  : "you have",
-  "i'll"  : "you will",
-  "my"  : "your",
-  "are"  : "am",
-  "you've": "I have",
-  "you'll": "I will",
-  "your"  : "my",
-  "yours"  : "mine",
-  "you"  : "me",
-  "me"  : "you",
-  "estoy"  : "estas",
-  "estaba"  : "estabas",
-  "yo"  : "tú",
-  "mi"  : "tu",
-  "tú"  : "yo",
-  "soy"  : "eres",
-  "estoy"  : "estas",
-  "era"  : "eras",
-  "estuve"  : "estuviste",
-  "mio"  : "tuyo"
-}
+        :param str user_input: El texto escrito por el usuario
+        :return Un texto de respuesta al usuario
+        :rtype: str
+        '''
+        caso = self.encontrar_intent(user_input)
+        self.identifica_contexto(caso) # Asignar contexto, es auxiliar para identificar ciertos casos particulares
+        informacion_adicional = self.acciones(caso, user_input)
+        respuesta = self.convertir_respuesta(random.choice(caso['respuesta']), caso, user_input)
+        respuesta_final = (respuesta + '\n' + informacion_adicional).strip() # Strip quita espacios en blanco al inicio y final del texto
+        return respuesta_final
 
-#----------------------------------------------------------------------
-# gPats, the main response table.  Each element of the list is a
-#  two-element list; the first is a regexp, and the second is a
-#  list of possible responses, with group-macros labelled as
-#  %1, %2, etc.
-#----------------------------------------------------------------------
-gPats = [
+    def encontrar_intent(self, user_input):
+        '''
+        Encuentra el caso o intent asociado en la base de conocimiento
 
-  [r'Hola como ([^\?]*)\??',
-  [ "Hola, ¿cómo puedo ayudarte?",
-    "¡Oh! Hola, ¿necesitas que te apoye en tus compras?"]],  
+        :param str user_input: El texto escrito por el usuario
+        :return El diccionario que representa el caso o intent deseado
+        :rtype: str
+        '''
+        for caso in self.conocimiento:
+            for regularexp in caso['regex']:
+                match = regularexp.match(user_input)
+                if match:
+                    self.regexp_selected = regularexp # Asignar esta propiedad es útil para acceder rápidamente a la expresión regular del match
+                    return caso
+        return {}
 
-  [r'Hola como (.*)',
-  [ "Hola, ¿cómo puedo ayudarte?",
-    "¡Oh! Hola, ¿necesitas que te apoye en tus compras?"]],  
+    def convertir_respuesta(self, respuesta, caso, user_input):
+        '''
+        Cambia los textos del tipo %1, %2, %3, etc., por su correspondiente propiedad
+        identificada en los grupos parentizados de la expresión regular asociada.
 
-  [r'Hola',
-  [ "Hola, soy Rod, dime ¿en qué te puedo ayudar? :)",
-    "Hola, ¿necesitas algún producto?"]],
+        :param str respuesta: Una respuesta que desea convertirse
+        :param dict caso: El caso o intent asociado a la respuesta
+        :param str user_input: El texto escrito por el usuario
+        :return La respuesta con el cambio de parámetros
+        :rtype: str
+        '''
+        respuesta_cambiada = respuesta
+        intent = caso['intent']
+        match = self.regexp_selected.match(user_input)
+        if intent == 'hacer pedido':
+            respuesta_cambiada = respuesta_cambiada.replace('%1', match.group(1))
+        return respuesta_cambiada
 
-  [r'Si',
-  [ "¿De qué departamento necesitas tus productos?"]],
+    def acciones(self, caso, user_input):
+        '''
+        Obtiene información adicional necesaria para dar una respuesta coherente al usuario.
+        El tipo de acciones puede ser una consulta de información, revisar base de datos, generar
+        un código, etc. y el resultado final es expresado como una cadena de texto
 
-  [r'No',
-  [ "¿Cómo puedo ayudarte?"]],
+        :param dict caso: El caso o intent asociado a la respuesta
+        :return Texto que representa información adicional para complementar la respuesta al usuario
+        :rtype: str
+        '''
+        intent = caso['intent']
+        if intent == 'dar categorias':
+            return self.get_categorias()
+        # elif intent == 'confirmar pizza':
+        #     return self.generar_ticket()
+        elif intent == 'confirmar':
+            return self.da_respuesta_apropiada(user_input) # TODO
+        return ''
 
-  [r'(.*) pedido',
-  [ "De acuerdo, ¿quieres un producto en específico o quieres dar un tour por el super?",
-    "Puedo ayudarte con eso, quieres ver las categorias o si lo prefieres indicame el producto que necesitas"]],
+    def identifica_contexto(self, caso):
+        intent = caso['intent']
+        if intent == 'hacer pedido':
+            self.contexto = 'PIZZA'
+        elif intent == 'confirmar pedido': # TODO
+            self.contexto = 'PEDIDO'
 
-  [r'(.*) orden',
-  [ "De acuerdo, ¿quieres un producto en específico o quieres dar un tour por el super?",
-    "Puedo ayudarte con eso, quieres ver las categorias o si lo prefieres indicame el producto que necesitas"]],   
+    def da_respuesta_apropiada(self, user_input):
+        if self.contexto == 'PIZZA':
+            if user_input.lower() == 'si' or user_input.lower() == 'sí':
+                self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
+                return 'Ok, se ha confirmado la pizza que deseas'
+            else:
+                self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
+                return 'Orden de pizza cancelado'
+        elif self.contexto == 'PEDIDO': # Sería análogo al caso de las pizzas
+            if user_input.lower() == 'si' or user_input.lower() == 'sí':
+                self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
+                return 'Ok, se ha confirmado tu pedido\n' + generar_ticket()
+            else:
+                self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
+                return 'Bien, tú orden sigue pendiente de ser confirmada'
+        elif self.contexto == 'DEFAULT':
+            return 'No comprendí lo que dices. ¿Qué necesitas?'
+        else:
+            return 'No comprendí lo que dices. ¿Qué necesitas?'
 
-  [r'(.*) precio (.*) producto',
-  [ "Con gusto, ¿de qué producto te gustaría saber el precio?",
-    "Indicame el nombre del producto que deseas conocer el precio, por favor."]],
+    def generar_ticket(self):
+        return 'Tu pedido es el número: {}'.format(randrange(0, 15))
 
-  r'(.*) costo (.*) producto',
-  [ "Con gusto, ¿de qué producto te gustaría saber el precio?",
-    "Indicame el nombre del producto que deseas conocer el precio, por favor."]],  
-
-  [r'(.*) precio (.*) envio',
-  [ "Para pedidos mayores de $1000, el envio es ¡GRATIS!",
-    "El envío tiene un costo de $50."]], 
-
-  [r'(.*) costo (.*) envio',
-  [ "Para pedidos mayores de $1000, el envio es ¡GRATIS!",
-    "El envío tiene un costo de $50 a cualquier parte de la CMDX"]], 
-
-  [r'Cuanto cuesta (.*) envio (.*)',
-  [ "Para pedidos mayores de $1000, el envio es ¡GRATIS!",
-    "El envío tiene un costo de $50 a cualquier parte de la CDMX"]],  
-
-  [r'I need (.*)',
-  [  "Why do you need %1?",
-    "Would it really help you to get %1?",
-    "Are you sure you need %1?"]],
-
-  [r'Why don\'?t you ([^\?]*)\??',
-  [  "Do you really think I don't %1?",
-    "Perhaps eventually I will %1.",
-    "Do you really want me to %1?"]],
-
-  [r'Why can\'?t I ([^\?]*)\??',
-  [  "Do you think you should be able to %1?",
-    "If you could %1, what would you do?",
-    "I don't know -- why can't you %1?",
-    "Have you really tried?"]],
-
-  [r'I can\'?t (.*)',
-  [  "How do you know you can't %1?",
-    "Perhaps you could %1 if you tried.",
-    "What would it take for you to %1?"]],
-
-  [r'I am (.*)',
-  [  "Did you come to me because you are %1?",
-    "How long have you been %1?",
-    "How do you feel about being %1?"]],
-
-  [r'I\'?m (.*)',
-  [  "How does being %1 make you feel?",
-    "Do you enjoy being %1?",
-    "Why do you tell me you're %1?",
-    "Why do you think you're %1?"]],
-
-  [r'Are you ([^\?]*)\??',
-  [  "Why does it matter whether I am %1?",
-    "Would you prefer it if I were not %1?",
-    "Perhaps you believe I am %1.",
-    "I may be %1 -- what do you think?"]],
-
-  [r'What (.*)',
-  [  "Why do you ask?",
-    "How would an answer to that help you?",
-    "What do you think?"]],
-
-  [r'How (.*)',
-  [  "How do you suppose?",
-    "Perhaps you can answer your own question.",
-    "What is it you're really asking?"]],
-
-  [r'Because (.*)',
-  [  "Is that the real reason?",
-    "What other reasons come to mind?",
-    "Does that reason apply to anything else?",
-    "If %1, what else must be true?"]],
-
-  [r'(.*) sorry (.*)',
-  [  "There are many times when no apology is needed.",
-    "What feelings do you have when you apologize?"]],
-
-  [r'Hello(.*)',
-  [  "Hello... I'm glad you could drop by today.",
-    "Hi there... how are you today?",
-    "Hello, how are you feeling today?"]],
-
-  [r'I think (.*)',
-  [  "Do you doubt %1?",
-    "Do you really think so?",
-    "But you're not sure %1?"]],
-
-  [r'(.*) friend (.*)',
-  [  "Tell me more about your friends.",
-    "When you think of a friend, what comes to mind?",
-    "Why don't you tell me about a childhood friend?"]],
-
-  [r'Yes',
-  [  "You seem quite sure.",
-    "OK, but can you elaborate a bit?"]],
-
-  [r'(.*) computer(.*)',
-  [  "Are you really talking about me?",
-    "Does it seem strange to talk to a computer?",
-    "How do computers make you feel?",
-    "Do you feel threatened by computers?"]],
-
-  [r'Is it (.*)',
-  [  "Do you think it is %1?",
-    "Perhaps it's %1 -- what do you think?",
-    "If it were %1, what would you do?",
-    "It could well be that %1."]],
-
-  [r'It is (.*)',
-  [  "You seem very certain.",
-    "If I told you that it probably isn't %1, what would you feel?"]],
-
-  [r'Can you ([^\?]*)\??',
-  [  "What makes you think I can't %1?",
-    "If I could %1, then what?",
-    "Why do you ask if I can %1?"]],
-
-  [r'Can I ([^\?]*)\??',
-  [  "Perhaps you don't want to %1.",
-    "Do you want to be able to %1?",
-    "If you could %1, would you?"]],
-
-  [r'You are (.*)',
-  [  "Why do you think I am %1?",
-    "Does it please you to think that I'm %1?",
-    "Perhaps you would like me to be %1.",
-    "Perhaps you're really talking about yourself?"]],
-
-  [r'You\'?re (.*)',
-  [  "Why do you say I am %1?",
-    "Why do you think I am %1?",
-    "Are we talking about you, or me?"]],
-
-  [r'I don\'?t (.*)',
-  [  "Don't you really %1?",
-    "Why don't you %1?",
-    "Do you want to %1?"]],
-
-  [r'I feel (.*)',
-  [  "Good, tell me more about these feelings.",
-    "Do you often feel %1?",
-    "When do you usually feel %1?",
-    "When you feel %1, what do you do?"]],
-
-  [r'I have (.*)',
-  [  "Why do you tell me that you've %1?",
-    "Have you really %1?",
-    "Now that you have %1, what will you do next?"]],
-
-  [r'I would (.*)',
-  [  "Could you explain why you would %1?",
-    "Why would you %1?",
-    "Who else knows that you would %1?"]],
-
-  [r'Is there (.*)',
-  [  "Do you think there is %1?",
-    "It's likely that there is %1.",
-    "Would you like there to be %1?"]],
-
-  [r'My (.*)',
-  [  "I see, your %1.",
-    "Why do you say that your %1?",
-    "When your %1, how do you feel?"]],
-
-  [r'You (.*)',
-  [  "We should be discussing you, not me.",
-    "Why do you say that about me?",
-    "Why do you care whether I %1?"]],
-
-  [r'Why (.*)',
-  [  "Why don't you tell me the reason why %1?",
-    "Why do you think %1?" ]],
-
-  [r'I want (.*)',
-  [  "What would it mean to you if you got %1?",
-    "Why do you want %1?",
-    "What would you do if you got %1?",
-    "If you got %1, then what would you do?"]],
-
-  [r'(.*) mother(.*)',
-  [  "Tell me more about your mother.",
-    "What was your relationship with your mother like?",
-    "How do you feel about your mother?",
-    "How does this relate to your feelings today?",
-    "Good family relations are important."]],
-
-  [r'(.*) father(.*)',
-  [  "Tell me more about your father.",
-    "How did your father make you feel?",
-    "How do you feel about your father?",
-    "Does your relationship with your father relate to your feelings today?",
-    "Do you have trouble showing affection with your family?"]],
-
-  [r'(.*) child(.*)',
-  [  "Did you have close friends as a child?",
-    "What is your favorite childhood memory?",
-    "Do you remember any dreams or nightmares from childhood?",
-    "Did the other children sometimes tease you?",
-    "How do you think your childhood experiences relate to your feelings today?"]],
-
-  [r'(.*)\?',
-  [  "Why do you ask that?",
-    "Please consider whether you can answer your own question.",
-    "Perhaps the answer lies within yourself?",
-    "Why don't you tell me?"]],
-
-  [r'salir',
-  [  "Thank you for talking with me.",
-    "Good-bye.",
-    "Thank you, that will be $150.  Have a good day!"]],
-
-  [r'(.*)',
-  [  "Please tell me more.",
-    "Let's change focus a bit... Tell me about your family.",
-    "Can you elaborate on that?",
-    "Why do you say that %1?",
-    "I see.",
-    "Very interesting.",
-    "%1.",
-    "I see.  And what does that tell you?",
-    "How does that make you feel?",
-    "How do you feel when you say that?"]]
-  ]
+    def get_categorias(self):
+        '''
+        Devuelve la lista de categorias en el mini super, junto con cada producto
+        Representa un ejemplo de consulta de información o acciones en el flujo
+        para construir una respuesta del chatbot
+        :return Texto de las categorias disponibles
+        :rtype str
+        '''
+        lista_productos = []
+        for productos in categorias:
+            lista_productos.append(productos['nombre'].title())
+        respuesta = ', '.join(lista_productos)
+        if not respuesta:
+            return 'Por el momento no tenemos disponible las categorias'
+        return respuesta
 
 #----------------------------------------------------------------------
-#  command_interface
+# Basse de conocimiento
+# La base de conocimiento representa una lista de todos los casos o intents
+# que el chatbot será capaz de identificar.
+#
+# Cada caso o intent es un diccionario que incluye los siguientes keys (propiedades):
+# - intent: Nombre para identificar el intent
+# - regex: Lista de posibles expresiones regulares asociadas al intent, donde los parámetros se obtienen del texto parentizado en la expresión regular
+# - respuesta: Lista de posibles respuestas al usuario, indicando los parámetros obtenidos con la notación %1, %2, %3, etc para cada parámetro
+#----------------------------------------------------------------------
+conocimiento = [
+    {
+        'intent': 'hacer pedido',
+        'regex': [
+            r'Quiero hacer un pedido (.*)',
+            r'.*pedido.*'
+        ],
+        'respuesta': [
+            '¿Deseas realizar un pedido %1?',
+            'Para verificar, ¿Quieres realizar una orden %1?'
+        ]
+    },
+    {
+        'intent': 'bienvenida',
+        'regex': [
+            r'.*Hola.*',
+            r'.*Buen(a|o)s (días|tardes|noches).*',
+        ],
+        'respuesta': [
+            'Bienvenido, ¿Qué deseas ordenar?',
+            'Hola, ¿Cómo te puedo ayudar?'
+        ]
+    },
+    {
+        'intent': 'dar categorias',
+        'regex': [
+            r'(Qué|Cuál|Dime|Dame).* (categorias).*',
+            r'(Qué|Cuáles) .* categorias*.*'
+        ],
+        'respuesta': [
+            'Te daré el las categorias con las que contamos en este momento',
+            'Estos son las categorias que tenemos en el mini super',
+            'El mini super cuenta con las siguientes categorias'
+        ]
+    },
+    {
+        'intent': 'confirmar',
+        'regex': [
+            r'Sí',
+            r'Si',
+            r'No',
+            r'No sé',
+            r'No se'
+        ],
+        'respuesta': [
+            '' # A priori no se puede dar una respuesta, se debe considerar el contexto (ver la función self.da_respuesta_apropiada())
+        ]
+    },
+    # {
+    #     'intent': 'confirmar pizza',
+    #     'regex': [
+    #         r'(Sí|Si)'
+    #     ],
+    #     'respuesta': [
+    #         'Ok'
+    #     ]
+    # },
+    # {
+    #     'intent': 'cancelar pizza',
+    #     'regex': [
+    #         r'NO',
+    #         r'(No sé|No se|nose)'
+    #     ],
+    #     'respuesta': [
+    #         'Está bien, entonces qué quieres?',
+    #         'Bien, cancelado'
+    #     ]
+    # },
+    {
+        'intent': 'desconocido',
+        'regex': [
+            r'.*'
+        ],
+        'respuesta': [
+            'No te entendí ¿Puedes repetirlo por favor? ',
+            'Disculpa, no comprendí lo que dices',
+            '¿Puedes decir lo mismo con otras palabras?'
+        ]
+    }
+]
+
+#----------------------------------------------------------------------
+# Diccionario que representan las categorias del supermercado en el area de abarrotes
+# Ejemplo de información que podría consultarse de manera externa,
+# ser generada, o auxiliar en la redacción de una respuesta del chatbot.
+#----------------------------------------------------------------------
+categorias = [
+    {
+        'nombre': 'lacteos',
+        'productos': ['leche', 'yogurt', 'queso manchego', 'queso oaxaca', 'queso panela', 'crema']
+    },
+    {
+        'nombre': 'enlatados',
+        'prodcutos': ['atun', 'frijoles', 'elotes', 'champiñones']
+    },
+    {
+        'nombre': 'botanas',
+        'productos': ['cheetos', 'fritos', 'tostitos', 'doritos', 'chips', 'ruffles', 'sabritas', 'paketaxo']
+    },
+    {
+        'nombre': 'galletas',
+        'productos': ['chokis', 'emperador', 'principe', 'marias', 'arcoiris', 'canelitas', 'polvorones', 'saladitas']
+    },
+    {
+        'nombre': 'pan',
+        'productos': ['pan blanco', 'pan integral', 'pan tostado', 'bimbollos', 'medias noches', 'donas', 'mantecadas', 'panque', 'choco roles']
+    },
+    {
+        'nombre': 'cerelaes',
+        'productos': ['avena', 'chocokrispis', 'zucaritas', 'kellogs', 'corn pops', 'trix', 'cheerios', 'all bran', 'froot loops']
+    },
+    {
+        'nombre': 'licores',
+        'productos': ['jose cuervo', 'carta blanca', 'bacardi', 'smirnoff', 'torres 10', 'mezacal']
+    },
+    {
+        'nombre': 'frutas',
+        'productos': ['fresas', 'platano', 'melon', 'pera', 'manzana', 'durazno', 'mango', 'piña', 'sandia']
+    },
+    {
+        'nombre': 'verduras',
+        'productos': ['aguacate', 'calabaza', 'zanahoria', 'cebolla', 'elote', 'papa', 'jitomate', 'pepino', 'tomate']
+    },
+    {
+        'nombre': 'carnes rojas',
+        'productos': ['arrachera', 'bisteck', 'molida', 'costilla']
+    },
+    {
+        'nombre': 'pescados',
+        'productos': ['filete de pescado', 'mojarra', 'salmon', 'camaron', 'atun fresco']
+    },
+    {
+        'nombre': 'aves',
+        'productos': ['milanesa de pollo', 'muslo', 'alitas', 'pierna', 'medallones', 'pechuga']
+    }
+]
+
+#----------------------------------------------------------------------
+#  Interfaz de texto
 #----------------------------------------------------------------------
 def command_interface():
-  print('Hola soy Rod, yo te ayudaré a realizar tus compras sin salir de casa')
-  print('-'*72)
-  print('Preguntame sobre precios, productos, envíos, dudas generales, lo que quieras-')
-  print('siempre y cuando sea en español aunque se un poquito de inglés')
-  print('='*72)
-  print('¿En que te puedo apoyar?')
+     print('Hola soy Rod, yo te ayudaré a realizar tus compras sin salir de casa')
+     print('-'*72)
+     print('Preguntame sobre precios, productos de abarrotes, envíos, dudas generales, lo que quieras-')
+     print('siempre y cuando sea en español aunque se un poquito de inglés')
+     print('='*72)
+     print('¿En que te puedo apoyar?')
 
-  s = ''
-  therapist = rod();
-  while s != 'salir':
-    try:
-      s = input('> ')
-    except EOFError:
-      s = 'salir'
-    print(s)
-    while s[-1] in '!.':
-      s = s[:-1]
-    print(therapist.respond(s))
-
+     input_usuario = ''
+     asistente = chatbot();
+     while input_usuario != 'salir':
+        try:
+            input_usuario = input('> ')
+        except EOFError:
+            print('Saliendo...')
+        else:
+            print(asistente.responder(input_usuario))
 
 if __name__ == "__main__":
-  command_interface()
+    command_interface()
