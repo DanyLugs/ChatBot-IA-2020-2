@@ -11,6 +11,6 @@ _Crear un chatbot capaz de interactuar con un ser humano, respondiendo sus pregu
 
 ## Autores ✒️
 
-* **Arenas Ayala Ramón** - *Trabajo Inicial* - [ramon_cmk@ciencias.unam.mx]
-* **Lugo Cano Daniel** - *Codificación y reporte* - [danylugo@ciencias.unam.mx]
-* **Millán Pimentel Oscar Fernando** - *Documentación* - [o_fernando_m_p@ciencias.unam.mx]
+* **Arenas Ayala Ramón**  - [ramon_cmk@ciencias.unam.mx]
+* **Lugo Cano Daniel** -  [danylugo@ciencias.unam.mx]
+* **Millán Pimentel Oscar Fernando** - [o_fernando_m_p@ciencias.unam.mx]
