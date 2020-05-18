@@ -12,6 +12,8 @@
 import string
 import re
 import random
+import decimal
+from random import randrange
 
 class chatbot:
     def __init__(self):
@@ -97,7 +99,7 @@ class chatbot:
             return self.get_destinos()
         elif intent == 'hoteles huatulco':
             return self.get_hotelesHuatulco()        
-        elif intent == 'confirmar':
+        elif intent == 'confirmar' or intent == 'estado':
             return self.da_respuesta_apropiada(user_input)     
         return ''
 
@@ -105,14 +107,18 @@ class chatbot:
         intent = caso['intent']
         if intent == 'reservar hotel':
             self.contexto = 'HOTEL'
-        elif intent == 'confirmar destino': # TODO
+        elif intent == 'confirmar destino':
             self.contexto = 'DESTINO'
         elif intent == 'reservar hotel personas':
             self.contexto = 'CUANTAS_PERSONAS'
         elif intent == 'recomendaciones huatulco comida':
             self.contexto = 'COMIDA_HUATULCO'
         elif intent == 'recomendaciones huatulco restaurante':
-            self.contexto = 'RESTAURANTE_HUATULCO'     
+            self.contexto = 'RESTAURANTE_HUATULCO'   
+        elif intent == 'recomendaciones huatulco lugares':
+            self.contexto = 'LUGARES_HUATULCO'
+        elif intent == 'costo vuelo huatulco':
+            self.contexto = 'VUELO_HUATULCO'    
 
     def da_respuesta_apropiada(self, user_input):
         if self.contexto == 'HOTEL':
@@ -135,14 +141,28 @@ class chatbot:
                 return 'Aqui tienes la lista de comida tipica del lugar: \n' + self.get_comidaTipicaHuatulco()
             else:
                 self.contexto = 'DEFAULT'
-                return '¿En que más puedo ayduarte?'    
+                return '¿En qué más puedo ayduarte?'    
         elif self.contexto == 'RESTAURANTE_HUATULCO':
             if user_input.lower() == 'si' or user_input.lower() == 'sí':
                 self.contexto = 'DEFAULT'
                 return 'Estos son los mejores restaurantes de Huatulco: \n' + self.get_restaurantesHuatulco() + '\n¿Puedo ayudarte con otra cosa?'
             else:
                 self.contexto = 'DEFAULT'
-                return '¿En que más puedo ayduarte?'           
+                return '¿En qué más puedo ayduarte?'   
+        elif self.contexto == 'LUGARES_HUATULCO':
+            if user_input.lower() == 'si' or user_input.lower() == 'sí':
+                self.contexto = 'DEFAULT'
+                return 'Te recomiendo visitar las playas muy tranquilas de Huatulco, el centro donde puedes encontrar artesanias locales y comida típica, además aquí tienes una lista de algunos lugares que debes visitar si vas a Huatulco: \n' + self.get_atractivosHuatulco() + '\n\n¿Puedo ayudarte con otra cosa?'             
+            else:
+                self.contexto = 'DEFAULT'
+                return 'En qué más puedo ayudarte?'  
+        elif self.contexto == 'VUELO_HUATULCO':
+            if user_input.lower() == 'CDMX':
+                self.contexto = 'DEFAULT'
+                return 'El costo de vuelo redondo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'
+            else: 
+                self.contexto = 'DEFAULT'
+                return 'El precio del vuelo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'    
         elif self.contexto == 'DEFAULT':
             return 'No comprendí lo que dices. ¿Qué necesitas?'
         else:
@@ -203,14 +223,32 @@ class chatbot:
         :return Texto de las comidas tipicas del lugar de acuerdo con opiniones en tripadvisor.com.mx
         :rtype str
         '''
-
         lista_restaurantes = []
         for restaurantes in restaurantesHuatulco:
             lista_restaurantes.append(restaurantes['nombre'].title())
-        respuesta = ', '.join(lista_restaurantes)
+        respuesta = '\n\n -'.join(lista_restaurantes).upper()
         if not respuesta:
             return 'No se encuentran disponibles los restaurantes de la zona'
-        return respuesta        
+        return respuesta  
+
+    def get_atractivosHuatulco(self):
+        '''
+        Devuelve una lista con los atractivos turísticos de Huatulco
+        Responde al intent = 'recomendaciones lugares huatulco'
+        Cuando el usuario pregunta sobre atractivos turísiticos o lugares históricos
+        :return Texto de los atractivos turísticos de Huatulco
+        :rtype str
+        '''
+        lista_lugares = []
+        for lugares in atractivosHuatulco:
+            lista_lugares.append(lugares['nombre'].title())
+        respuesta = '\n\n -'.join(lista_lugares).upper()
+        if not respuesta:
+            return 'No se encuentra disponible la lista de lugares turísiticos'
+        return respuesta  
+
+    def generar_cantidad(self):
+        return '{}'.format(decimal.Decimal(random.randrange(150000, 450000))/100)          
 #----------------------------------------------------------------------
 # Base de conocimiento
 # La base de conocimiento representa una lista de todos los casos o intents
@@ -235,18 +273,7 @@ conocimiento = [
             'Hola, ¿Cómo te puedo apoyar?'
         ]
     },
-    {
-        'intent': 'dar destinos',
-        'regex': [
-            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero).* (destinos|lugares).*',
-            r'Dime a donde puedo viajar .*'
-        ],
-        'respuesta': [
-            'Te daré la lista de destinos con los que contamos:',
-            'Estos son los lugares en los que te puedo ayudar a realizar una reservación completa:',
-            'Nuestros destinos son las playas más atractivas de México:'
-        ]
-    },
+
     # INFORMACIÓN REFERENTE A HUATULCO INICIO
     {
         'intent': 'hoteles huatulco',
@@ -335,7 +362,43 @@ conocimiento = [
             'Huatulco ofrece gran variedad gastronomica del estado de Oaxaca, ¿gustas que te muestre la lista de comida tipica del lugar?',
             '¿Quieres que te muestre una lista con variedad de comida tipica de Huatulco?'
         ]
+    },
+    {
+        'intent': 'recomendaciones huatulco lugares',
+        'regex': [
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .* huatulco',
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .* huatulco .*',
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* (atractivo|atractivo) (turistico|turisticos) .* huatulco'
+        ],
+        'respuesta': [
+            'La riqueza histórica y cultural del estado de Oaxaca es extensa, de este repertorio, una partre se encuentra en Huatulco, ¿Quieres que te muestre una lista sitios para visitar?'
+        ]
     },    
+    {
+        'intent': 'costo vuelo huatulco',
+        'regex': [
+            r'(precio|costo) .* vuelo .* huatulco .*',
+            r'(Cuanto|Cuánto) .* vuelo .* huatulco .*',
+            r'(Cuanto|Cuánto) .* vuelo .* huatulco',
+            r'(precio|costo) .* vuelo .* huatulco'
+        ],
+        'respuesta': [
+            'Para decirte el costo, dime ¿desde qué estado de la republica quieres viajar?',
+            'Para indicarte el precio podrías decirme por favor ¿de qué estado de la republica quiere viajar?'
+        ]    
+    },
+    {
+        'intent': 'dar destinos',
+        'regex': [
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero).* (destinos|lugares).*',
+            r'Dime a donde puedo viajar .*'
+        ],
+        'respuesta': [
+            'Te daré la lista de destinos con los que contamos:',
+            'Estos son los lugares en los que te puedo ayudar a realizar una reservación completa:',
+            'Nuestros destinos son las playas más atractivas de México:'
+        ]
+    },
     {
         'intent': 'ir huatulco',
         'regex': [
@@ -384,6 +447,16 @@ conocimiento = [
         'respuesta': [
             'Veo que quieres %1 Puerto Vallarta, ¿qué necesitas que haga por ti?',
             'Puerto Vallarta!, gran elección para visitar, ¿cómo puedo ayudarte con tu viaje?'
+        ]
+    },
+    {
+        'intent': 'estado',
+        'regex': [
+            r'(Aguascalientes|AGS|Baja California|BajaCAlifornia SUr|Campeche|Chiapas|Chihuahua|Ciudad de México|Ciudad de Mexico|DF|CDMX|Coahuila|Colima|Durango|Guanajuato|Guerrero|Hidalgo|Jalisco)',
+            r'(Michoacán|Estado de Mexico|Estado de México|Morelos|Nayarit|Nuevo León|Monterrey|Oaxaca|Puebla|Querétaro|Queretaro|Quintana Roo|San Luis Potosí|San Luis Potosi|Sinaloa|Sonora|Tabasco|Tamapulipas|Tlaxcala|Veracruz|Yucatán|Zacatecas)'
+        ],
+        'respuesta': [
+            '' # A priori no se puede dar una respuesta, se debe considerar el contexto (ver la función self.da_respuesta_apropiada())
         ]
     },
     {
@@ -474,16 +547,31 @@ comidaTipicaHuatulco = [
 
 restaurantesHuatulco = [
     {
-        'nombre': 'Rocoto'
+        'nombre': '-Rocoto: Te recomendamos el carpaccio de res como entrada, filete mignon a la mostaza con tocino de plato fuerte, disfruta con vino tinto de la mejor claidad.'
     },
     {
-        'nombre': 'Mare'
+        'nombre': 'Mare: Si disfrutas de la comida italiana esta es la opcion para ti, precios accesibles, alimentos de la mejor calidad y atención excepcional.'
     },
     {
-        'nombre': 'Viena Huatulco'
+        'nombre': 'Viena Huatulco: Si lo que buscas es algo más exotico Viena Huatulco es tu opción, gran variedad de platillos austriacos y postres que te harán pedir doble porción.'
     },
     {
-        'nombre': 'Mercader'
+        'nombre': 'Mercader: Lugar acogedor, menú completo, sabores exquisitos con su comida internacional, si eres hogareño esta es tu opción.'
+    }
+]
+
+atractivosHuatulco = [
+    {
+        'nombre': 'La bufadora: un lugar creado por la naturaleza ubicado en Bahias de Huatulco, su sonido al expulsar agua acumulada en su pequeña cueva te dejará atónito'
+    },
+    {
+        'nombre': 'Cara en la piedra: Ubicado en Bahias de Huatulco, una belleza natural que en sus acantilados formó, a lo largo de muchos años, un rostro, ver para creer.'
+    },
+    {
+        'nombre': 'Bahia de Maguey: Una de las playas virgenes más visitadas de Huatulco, cuenta con exquisitos restaurantes que te deleitaran con sus marsicadas y parrilladas de mariscos'
+    },
+    {
+        'nombre': 'Puerto de cruceros: Un gran muelle para que encayen los cruceros que viajan por el Oceano Pacífico, una vista impresionante si tienes la suerte de que llegue uno cuando visites Huatulco'
     }
 ]
 
