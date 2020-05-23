@@ -427,6 +427,15 @@ conocimiento = [
         ]
     },
     {
+        'intent': 'huatulco',
+        'regex': [
+            r'Huatulco'
+        ],
+        'respuesta': [
+            'Excelente lugar para descansar, disfrutar la playa y una bebida referscante'
+        ]
+    },
+    {
         'intent': 'ir huatulco',
         'regex': [
             r'Quiero (.*) Huatulco',
