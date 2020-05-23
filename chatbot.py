@@ -194,7 +194,7 @@ class chatbot:
         lista_hoteles = []
         for hoteles in hotelesHuatulco:
             lista_hoteles.append(hoteles['nombre'].title())
-        respuesta = ', '.join(lista_hoteles)
+        respuesta = '\n\n -'.join(lista_hoteles)
         if not respuesta:
             return 'Por el momento no tenemos hoteles disponibles en Huatulco'
         return respuesta
@@ -388,9 +388,36 @@ conocimiento = [
         ]    
     },
     {
+        'intent': 'actividades huatulco',
+        'regex': [
+            r'(Que|Qué) puedo hacer en Huatulco .*',
+            r'(Que|Que) actividades .* Huatulco .*',
+            r'(Que|Qué) puedo hacer en Huatulco',
+            r'(Que|Que) actividades .* Huatulco',
+            r'(Que|Qué) .* hacer .* huatulco',
+            r'(Que|Qué) .* hacer .* huatulco.*'
+        ],
+        'respuesta': [
+            'Yo te recomiendo dar el tour por las Bahías de Huatulco, aquí podrás encontrar las playas más bonitas y solitarias de todo Huatulco \n¿Puedo ayudarte con otra cosa?',
+            'Si te encanta nadar y la naturaleza lo tuyo será el recorrido con snorkel en las playas de Huatulco, podrás ver cientos de peces de diferentes espcies así como fauna marina \n¿Puedo ayudarte con otra cosa?',
+            'Si lo que buscas es algo más cultural e histórico, puedes recorrer los yacimientos arqueológicos así como el centro de Huatulco en busca de artesanias locales \n¿Puedo ayudarte con otra cosa?'
+        ]    
+    },
+    {
+        'intent': 'dar clima huatulco',
+        'regex': [
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (clima|tiempo).* Huatulco.*',
+            r'.* clima .* Huatulco .*'
+        ],
+        'respuesta': [
+            'El clima en Huatulco es tropical, cálido y húmedo, temperatura promedio de 27°',
+            '27° promedio durante todo el año, nueblado en verano con algunas precepitaciones pero no deja de ser un clima perfecto para disfrutar la playa'
+        ]
+    },
+    {
         'intent': 'dar destinos',
         'regex': [
-            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero).* (destinos|lugares).*',
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (destinos|lugares).*',
             r'Dime a donde puedo viajar .*'
         ],
         'respuesta': [
@@ -478,8 +505,8 @@ conocimiento = [
             r'.*'
         ],
         'respuesta': [
-            'No te entendí ¿Puedes repetirlo por favor? ',
             'Disculpa, no comprendí lo que dices',
+            'Podrías reformular tu pregunta por favor'
             '¿Puedes decir lo mismo con otras palabras?'
         ]
     }
@@ -507,19 +534,19 @@ destinos = [
 
 hotelesHuatulco = [
     {
-        'nombre': 'Las Brisas Huatulco',
+        'nombre': '-Las Brisas Huatulco: $950 la noche por persona, todo incluido',
         'estrellas': '5 estrellas'
     },
     {
-        'nombre': 'El Barcelo',
+        'nombre': 'El Barcelo: $1,200 la noche por persona, todo incluido',
         'estrellas': '5 estrellas'
     },
     {
-        'nombre': 'Camino Real Zaashila',
+        'nombre': 'Camino Real Zaashila: $750 la noche por persona, desayuno incluido',
         'estrellas': '5 estrellas'
     },
     {
-        'nombre': 'Secrets Huatulco Resort & Spa',
+        'nombre': 'Secrets Huatulco Resort & Spa: $1,500 la noche por persona, desayuno incluido',
         'estrellas': '5 estrellas'
     }
 ]
