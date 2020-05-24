@@ -1,3 +1,4 @@
+#enconding: utf-8
 #----------------------------------------------------------------------
 #  chatbot.py
 #
@@ -107,7 +108,7 @@ class chatbot:
         intent = caso['intent']
         if intent == 'reservar hotel':
             self.contexto = 'HOTEL'
-        elif intent == 'confirmar destino':
+        elif intent == 'confirmar':
             self.contexto = 'DESTINO'
         elif intent == 'reservar hotel personas':
             self.contexto = 'CUANTAS_PERSONAS'
@@ -628,7 +629,7 @@ def command_interface():
     print('¿En que te puedo apoyar?')
 
     input_usuario = ''
-    asistente = chatbot();
+    asistente = chatbot()
     while input_usuario != 'salir':
         try:
             input_usuario = input('> ')
