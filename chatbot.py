@@ -199,6 +199,20 @@ class chatbot:
             return 'Por el momento no tenemos hoteles disponibles en Huatulco'
         return respuesta
 
+    def get_hotelesAcapulco(self):
+        '''
+        Devuelve una lista de los hoteles en Acapulco exclusivamente
+        :return Texto de los hoteles disponibles en Acapulco
+        :rtype str
+        '''
+        lista_hoteles = []
+        for hoteles in hotelesAcapulco:
+            lista_hoteles.append(hoteles['nombre'].title())
+        respuesta = '\n\n -'.join(lista_hoteles)
+        if not respuesta:
+            return 'Por el momento no tenemos hoteles disponibles en Huatulco'
+        return respuesta
+
     def get_comidaTipicaHuatulco(self):
         '''
         Devuelve una lista con la comida tipica de Huatulco
@@ -209,6 +223,22 @@ class chatbot:
         ''' 
         lista_comida = []
         for comida in comidaTipicaHuatulco:
+            lista_comida.append(comida['nombre'].title())
+        respuesta = ', '.join(lista_comida)
+        if not respuesta:
+            return 'No se encuentra disponible la lista de comida tipica de Huatulco en este momento'
+        return respuesta
+
+   def get_comidaTipicaAcapulco(self):
+        '''
+        Devuelve una lista con la comida tipica de Huatulco
+        Responde al intent = 'recomendaciones huatulco comida'
+        Cuando el usuario pregunta por comida en ese destino
+        :return Texto de las comidas tipicas del lugar según mexicodestinos.com
+        :rtype str
+        ''' 
+        lista_comida = []
+        for comida in comidaTipicaAcapulco:
             lista_comida.append(comida['nombre'].title())
         respuesta = ', '.join(lista_comida)
         if not respuesta:
@@ -229,6 +259,22 @@ class chatbot:
         respuesta = '\n\n -'.join(lista_restaurantes).upper()
         if not respuesta:
             return 'No se encuentran disponibles los restaurantes de la zona'
+        return respuesta
+
+   def get_restaurantesAcapaulco(self):
+        '''
+        Devuelve una lista con los mejores restaurantes de Huatulco
+        Responde al intent = 'recomendaciones huatulco restaurante'
+        Cuando el usuario pregunte sobre lugares para comer en ese destino
+        :return Texto de las comidas tipicas del lugar de acuerdo con opiniones en tripadvisor.com.mx
+        :rtype str
+        '''
+        lista_restaurantes = []
+        for restaurantes in restaurantesAcapulco:
+            lista_restaurantes.append(restaurantes['nombre'].title())
+        respuesta = '\n\n -'.join(lista_restaurantes).upper()
+        if not respuesta:
+            return 'No se encuentran disponibles los restaurantes de la zona'
         return respuesta  
 
     def get_atractivosHuatulco(self):
@@ -245,7 +291,23 @@ class chatbot:
         respuesta = '\n\n -'.join(lista_lugares).upper()
         if not respuesta:
             return 'No se encuentra disponible la lista de lugares turísiticos'
-        return respuesta  
+        return respuesta
+    
+    def get_atractivosAcapulco(self):
+        '''
+        Devuelve una lista con los atractivos turísticos de Huatulco
+        Responde al intent = 'recomendaciones lugares huatulco'
+        Cuando el usuario pregunta sobre atractivos turísiticos o lugares históricos
+        :return Texto de los atractivos turísticos de Huatulco
+        :rtype str
+        '''
+        lista_lugares = []
+        for lugares in atractivosHuatulco:
+            lista_lugares.append(lugares['nombre'].title())
+        respuesta = '\n\n -'.join(lista_lugares).upper()
+        if not respuesta:
+            return 'No se encuentra disponible la lista de lugares turísiticos'
+        return respuesta 
 
     def generar_cantidad(self):
         return '{}'.format(decimal.Decimal(random.randrange(150000, 450000))/100)          
@@ -414,6 +476,18 @@ conocimiento = [
             '27° promedio durante todo el año, nueblado en verano con algunas precepitaciones pero no deja de ser un clima perfecto para disfrutar la playa'
         ]
     },
+
+    {
+        'intent': 'dar clima acapulco',
+        'regex': [
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (clima|tiempo).* Acapulco.*',
+            r'.* clima .* Huatulco .*'
+        ],
+        'respuesta': [
+            'En Acapulco, la temporada de lluvia es nublada, la temporada seca es parcialmente nublada y es muy caliente y opresivo durante todo el año. Durante el transcurso del año, la temperatura generalmente varía de 21 °C a 32 °C y rara vez baja a menos de 18 °C o sube a más de 33 °C.'
+        ]
+    },
+
     {
         'intent': 'dar destinos',
         'regex': [
@@ -445,6 +519,140 @@ conocimiento = [
         'respuesta': [
             'Veo que quieres %1 Huatulco, ¿qué necesitas que haga por ti?',
             '¡Huatulco!, gran elección para visitar, ¿cómo puedo ayudarte con tu viaje?'
+        ]
+    },
+    
+    # INFORMACION REFERENTE A HUATULCO FIN
+
+    # INFORMACIÓN REFERENTE A ACAPULCO INICIO
+    {
+        'intent': 'hoteles acapulco',
+        'regex': [
+            r'(Que|Qué|Cuáles|Cuales|Quiero|Quisiera|Dime) (.*) hoteles (.*) Acapulco'
+        ],
+        'respuesta': [
+            'La lista de hoteles diponibles te la muestro a continuación:'
+        ]
+    },
+    {
+        'intent': 'que hotel acapulco',
+        'regex': [
+            r'.*Krystal Beach Acapulco.*',
+            r'.*Romano Palace.*',
+            r'.*Playa Suites Acapulco.*'
+            r'.*Las Brisas Acapulco.*'
+	],
+        'respuesta': [
+            'Excelente, ¿Me puedes indicar la fecha de llegada al destino? Por favor utiliza el formato: "DD MES YYYY".'
+        ]
+    },
+    {
+        'intent': 'recomendaciones acapulco restaurante',
+        'regex': [
+            r'.* (restaurante|restaurantes) .* acapulco',
+            r'.* (restaurantes|restaurante) .* acapulco .*',
+            r'(Donde|En que lugar|Algun lugar) .* comer .* acapulco .*'
+        ],
+        'respuesta': [
+            'Si quieres comer en un bonito lugar en Acapulco, ¿puedo mostrarte los mejores restaurantes de la zona?',
+            '¿Quieres que te muestre una lista con variedad de lugares para comer delicioso en Acapulco?'
+        ]    
+    },
+    {
+        'intent': 'recomendaciones acapulco comida',
+        'regex': [
+            r'.* que .* (comer|comida) .* acapulco.*',
+            r'.* comida tipica .* acapulco .*',
+            r'.* comida .* acapulco .*',
+            r'.* comida .* acapulco',
+            r'.* comer .* acapulco'
+        ],
+        'respuesta': [
+            'Acapulco ofrece gran variedad gastronomica del estado de Guerrero, ¿gustas que te muestre la lista de comida tipica del lugar?',
+            '¿Quieres que te muestre una lista con variedad de comida tipica de Acapulco?'
+        ]
+    },
+    {
+        'intent': 'recomendaciones acapulco lugares',
+        'regex': [
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .* acapulco',
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .* acapulco .*',
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* (atractivo|atractivo) (turistico|turisticos) .* acapulco'
+        ],
+        'respuesta': [
+            'La riqueza histórica y cultural del estado de Oaxaca es extensa, de este repertorio, una partre se encuentra en Huatulco, ¿Quieres que te muestre una lista sitios para visitar?'
+        ]
+    },    
+    {
+        'intent': 'costo vuelo acapulco',
+        'regex': [
+            r'(precio|costo) .* vuelo .* acapulco .*',
+            r'(Cuanto|Cuánto) .* vuelo .* acapulco .*',
+            r'(Cuanto|Cuánto) .* vuelo .* acapulco',
+            r'(precio|costo) .* vuelo .* acapulco'
+        ],
+        'respuesta': [
+            'Para decirte el costo, dime ¿desde qué estado de la republica quieres viajar?',
+            'Para indicarte el precio podrías decirme por favor ¿de qué estado de la republica quiere viajar?'
+        ]    
+    },
+    {
+        'intent': 'actividades acapulco',
+        'regex': [
+            r'(Que|Qué) puedo hacer en Acapulco .*',
+            r'(Que|Que) actividades .* Acapulco .*',
+            r'(Que|Qué) puedo hacer en Acapulco',
+            r'(Que|Que) actividades .* Acapulco',
+            r'(Que|Qué) .* hacer .* Acapulco',
+            r'(Que|Qué) .* hacer .* Acapulco.*'
+        ],
+        'respuesta': [
+	    'PENDIENTE',
+        ]    
+    },
+
+    {
+        'intent': 'dar clima acapulco',
+        'regex': [
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (clima|tiempo).* Acapulco.*',
+            r'.* clima .* Huatulco .*'
+        ],
+        'respuesta': [
+            'En Acapulco, la temporada de lluvia es nublada, la temporada seca es parcialmente nublada y es muy caliente y opresivo durante todo el año. Durante el transcurso del año, la temperatura generalmente varía de 21 °C a 32 °C y rara vez baja a menos de 18 °C o sube a más de 33 °C.'
+        ]
+    },
+
+    {
+        'intent': 'dar destinos',
+        'regex': [
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (destinos|lugares).*',
+            r'Dime a donde puedo viajar .*'
+        ],
+        'respuesta': [
+            'Te daré la lista de destinos con los que contamos:',
+            'Estos son los lugares en los que te puedo ayudar a realizar una reservación completa:',
+            'Nuestros destinos son las playas más atractivas de México:'
+        ]
+    },
+    {
+        'intent': 'acapulco',
+        'regex': [
+            r'Acapulco'
+        ],
+        'respuesta': [
+            'Excelente lugar para descansar, disfrutar la playa y una bebida referscante'
+        ]
+    },
+    {
+        'intent': 'ir acapulco',
+        'regex': [
+            r'Quiero (.*) Acapulco',
+            r'Quisiera (.*) Acapulco',
+            r'.*Acapulco.*'
+        ],
+        'respuesta': [
+            'Veo que quieres %1 Acapulco, ¿qué necesitas que haga por ti?',
+            '¡Acapulco!, gran elección para visitar, ¿cómo puedo ayudarte con tu viaje?'
         ]
     },
     
@@ -560,6 +768,25 @@ hotelesHuatulco = [
     }
 ]
 
+hotelesAcapulco = [
+    {
+        'nombre': '-Krystal Beach Acapulco: $950 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Romano Palace: $1,200 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Playa Suites Acapulco: $750 la noche por persona, desayuno incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Las Brisas Acapulco: $1,500 la noche por persona, desayuno incluido',
+        'estrellas': '5 estrellas'
+    }
+]
+
 comidaTipicaHuatulco = [
     {
         'nombre': 'Quesillo'
@@ -581,6 +808,27 @@ comidaTipicaHuatulco = [
     }
 ]
 
+comidaTipicaAcapulco = [
+    {
+        'nombre': 'Pulpos en su tinta'
+    },
+    {
+        'nombre': 'Pescado a la Talla'
+    },
+    {
+        'nombre': 'Pozole verde'
+    },
+    {
+        'nombre': 'Camarones al mojo de ajo'
+    },
+    {
+        'nombre': 'Ceviche'
+    },
+    {
+        'nombre': 'Sopa de pescados y mariscos'
+    }
+]
+
 restaurantesHuatulco = [
     {
         'nombre': '-Rocoto: Te recomendamos el carpaccio de res como entrada, filete mignon a la mostaza con tocino de plato fuerte, disfruta con vino tinto de la mejor claidad.'
@@ -596,6 +844,18 @@ restaurantesHuatulco = [
     }
 ]
 
+restaurantesAcapulco= [
+    {
+        'nombre': '-Carlos and Charlies Acapulco: Muy buena música y un gran ambiente. El mojito es la mejor bebida del lugar!'
+    },
+    {
+        'nombre': 'Lupe de Arena: Un gran lugar para disfrutar de comida mexicanay mariscos.'
+    },
+    {
+        'nombre': 'La Finca Acapulco: Deliciosa paella y como siempre la mejor atención.'
+    },
+]
+
 atractivosHuatulco = [
     {
         'nombre': 'La bufadora: un lugar creado por la naturaleza ubicado en Bahias de Huatulco, su sonido al expulsar agua acumulada en su pequeña cueva te dejará atónito'
@@ -608,6 +868,21 @@ atractivosHuatulco = [
     },
     {
         'nombre': 'Puerto de cruceros: Un gran muelle para que encayen los cruceros que viajan por el Oceano Pacífico, una vista impresionante si tienes la suerte de que llegue uno cuando visites Huatulco'
+    }
+]
+
+atractivosAcapulco = [
+    {
+        'nombre': 'La Quebrada: un magnífico espacio de arte y vista en el que podrás evidenciar las actividades de clavadistas para los que no le tienen miedo a la adrenalina.'
+    },
+    {
+        'nombre': 'Parque Papagayo: visita los tres lagos artificiales y sus extensas áreas verdes, donde encontrarte con la diversidad de flora y fauna exótica no será novedad.'
+    },
+    {
+        'nombre': 'Tirolesa Xtasea: la tirolesa más grande del mundo sobre el nivel del mar, te ofrece una altura de 100mts sobre la montaña y 700mts sobre el mar con una longitud de 1800mts.'
+    },
+    {
+        'nombre': 'Grutas de Cacahuamilpa: el lugar de los sistemas de cuevas y formaciones calcáreas que presenta 19 salones de forma natural e iluminados con su respectivo nombre, llenos de estalagmitas y estalactitas, toda una aventura'
     }
 ]
 
