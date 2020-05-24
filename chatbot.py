@@ -82,6 +82,8 @@ class chatbot:
         #     return respuesta_cambiada
         if intent == 'ir huatulco':
             respuesta_cambiada = respuesta_cambiada.replace('%1', match.group(1))
+        if intent == 'ir cancun':
+            respuesta_cambiada = respuesta_cambiada.replace('%1', match.group(1))
         return respuesta_cambiada
 
     def acciones(self, caso, user_input):
@@ -98,19 +100,33 @@ class chatbot:
         if intent == 'dar destinos':
             return self.get_destinos()
         elif intent == 'hoteles huatulco':
-            return self.get_hotelesHuatulco()        
+            return self.get_hotelesHuatulco()  
+        elif intent == 'hoteles cancun':
+            return self.get_hotelesCancun()        
         elif intent == 'confirmar' or intent == 'estado':
             return self.da_respuesta_apropiada(user_input)     
         return ''
 
     def identifica_contexto(self, caso):
         intent = caso['intent']
+        
+        #HUATULCO
         if intent == 'reservar hotel':
             self.contexto = 'HOTEL'
         elif intent == 'confirmar destino':
             self.contexto = 'DESTINO'
         elif intent == 'reservar hotel personas':
             self.contexto = 'CUANTAS_PERSONAS'
+        
+        #CANCUN
+        if intent == 'reservar hotel cancun':
+            self.contexto = 'HOTEL_CANCUN'
+        elif intent == 'confirmar destino':
+            self.contexto = 'DESTINO'
+        elif intent == 'reservar hotel personas cancun':
+            self.contexto = 'CUANTAS_PERSONAS_CANCUN'
+        
+        #HUATULCO
         elif intent == 'recomendaciones huatulco comida':
             self.contexto = 'COMIDA_HUATULCO'
         elif intent == 'recomendaciones huatulco restaurante':
@@ -118,13 +134,24 @@ class chatbot:
         elif intent == 'recomendaciones huatulco lugares':
             self.contexto = 'LUGARES_HUATULCO'
         elif intent == 'costo vuelo huatulco':
-            self.contexto = 'VUELO_HUATULCO'    
+            self.contexto = 'VUELO_HUATULCO'
+        
+        #CANCUN
+        elif intent == 'recomendaciones cancun comida':
+            self.contexto = 'COMIDA_CANCUN'
+        elif intent == 'recomendaciones cancun restaurante':
+            self.contexto = 'RESTAURANTE_CANCUN'   
+        elif intent == 'recomendaciones cancun lugares':
+            self.contexto = 'LUGARES_CANCUN'
+        elif intent == 'costo vuelo cancun':
+            self.contexto = 'VUELO_CANCUN'    
 
     def da_respuesta_apropiada(self, user_input):
+        #HUATULCO
         if self.contexto == 'HOTEL':
             if user_input.lower() == 'si' or user_input.lower() == 'sí':
                 self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
-                return 'Claro, ¿Para cuantas personas necesita su reservación de hotel en Huatulco?'
+                return 'Claro, ¿Para cuantas personas necesita su reservación de hotel en Huatulco?' #
             else:
                 self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
                 return 'Reservacion cancelada, ¿qué puedo hacer por ti?'
@@ -135,6 +162,24 @@ class chatbot:
             else:
                 self.contexto = 'DEFAULT'
                 return 'He cancelado la reservación, ¿Necesitas que haga algo más?'
+        
+        #CANCUN
+        if self.contexto == 'HOTEL_CANCUN':
+            if user_input.lower() == 'si' or user_input.lower() == 'sí':
+                self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
+                return 'Claro, ¿Para cuantas personas necesita su reservación de hotel en Cancun?' #
+            else:
+                self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
+                return 'Reservacion cancelada, ¿qué puedo hacer por ti?'
+        elif self.contexto == 'CUANTAS_PERSONAS_CANCUN':
+            if user_input.lower() == 'si' or user_input.lower() == 'sí':
+                self.contexto = 'DEFAULT'
+                return 'De acuerdo, te muestro la lista de hoteles disponibles en ese destino: \n' + self.get_hotelesCancun()
+            else:
+                self.contexto = 'DEFAULT'
+                return 'He cancelado la reservación, ¿Necesitas que haga algo más?'
+            
+        #HUATULCO    
         elif self.contexto == 'COMIDA_HUATULCO':
             if user_input.lower() == 'si' or user_input.lower() == 'sí':
                 self.contexto = 'DEFAULT'
@@ -162,7 +207,38 @@ class chatbot:
                 return 'El costo de vuelo redondo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'
             else: 
                 self.contexto = 'DEFAULT'
-                return 'El precio del vuelo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'    
+                return 'El precio del vuelo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'   
+        
+        #Cancun    
+        elif self.contexto == 'COMIDA_CANCUN':
+            if user_input.lower() == 'si' or user_input.lower() == 'sí':
+                self.contexto = 'DEFAULT'
+                return 'Aqui tienes la lista de comida tipica del lugar: \n' + self.get_comidaTipicaCancun()
+            else:
+                self.contexto = 'DEFAULT'
+                return '¿En qué más puedo ayduarte?'    
+        elif self.contexto == 'RESTAURANTE_CANCUN':
+            if user_input.lower() == 'si' or user_input.lower() == 'sí':
+                self.contexto = 'DEFAULT'
+                return 'Estos son los mejores restaurantes de Cancun: \n' + self.get_restaurantesCancun() + '\n¿Puedo ayudarte con otra cosa?'
+            else:
+                self.contexto = 'DEFAULT'
+                return '¿En qué más puedo ayduarte?'   
+        elif self.contexto == 'LUGARES_CANCUN':
+            if user_input.lower() == 'si' or user_input.lower() == 'sí':
+                self.contexto = 'DEFAULT'
+                return 'Te recomiendo visitar las playas muy tranquilas de Cancun, el centro donde puedes encontrar artesanias locales y comida típica, además aquí tienes una lista de algunos lugares que debes visitar si vas a Cancun: \n' + self.get_atractivosCancun() + '\n\n¿Puedo ayudarte con otra cosa?'             
+            else:
+                self.contexto = 'DEFAULT'
+                return 'En qué más puedo ayudarte?'  
+        elif self.contexto == 'VUELO_CANCUN':
+            if user_input.lower() == 'CDMX':
+                self.contexto = 'DEFAULT'
+                return 'El costo de vuelo redondo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'
+            else: 
+                self.contexto = 'DEFAULT'
+                return 'El precio del vuelo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'   
+          
         elif self.contexto == 'DEFAULT':
             return 'No comprendí lo que dices. ¿Qué necesitas?'
         else:
@@ -185,6 +261,8 @@ class chatbot:
             return 'Por el momento no tenemos disponible ningún destino'
         return respuesta
 
+    #Funciones Huatulco
+    
     def get_hotelesHuatulco(self):
         '''
         Devuelve una lista de los hoteles en Huatulco exclusivamente
@@ -241,6 +319,70 @@ class chatbot:
         '''
         lista_lugares = []
         for lugares in atractivosHuatulco:
+            lista_lugares.append(lugares['nombre'].title())
+        respuesta = '\n\n -'.join(lista_lugares).upper()
+        if not respuesta:
+            return 'No se encuentra disponible la lista de lugares turísiticos'
+        return respuesta  
+    
+    #Funciones Cancun
+    
+    def get_hotelesCancun(self):
+        '''
+        Devuelve una lista de los hoteles en Cancun exclusivamente
+        :return Texto de los hoteles disponibles en Cancun
+        :rtype str
+        '''
+        lista_hoteles = []
+        for hoteles in hotelesCancun:
+            lista_hoteles.append(hoteles['nombre'].title())
+        respuesta = '\n\n -'.join(lista_hoteles)
+        if not respuesta:
+            return 'Por el momento no tenemos hoteles disponibles en Cancun'
+        return respuesta
+
+    def get_comidaTipicaCancun(self):
+        '''
+        Devuelve una lista con la comida tipica de Cancun
+        Responde al intent = 'recomendaciones Cancun comida'
+        Cuando el usuario pregunta por comida en ese destino
+        :return Texto de las comidas tipicas del lugar según mexicodestinos.com
+        :rtype str
+        ''' 
+        lista_comida = []
+        for comida in comidaTipicaCancun:
+            lista_comida.append(comida['nombre'].title())
+        respuesta = ', '.join(lista_comida)
+        if not respuesta:
+            return 'No se encuentra disponible la lista de comida tipica de Cancun en este momento'
+        return respuesta 
+
+    def get_restaurantesCancun(self):
+        '''
+        Devuelve una lista con los mejores restaurantes de Cancun
+        Responde al intent = 'recomendaciones Cancun restaurante'
+        Cuando el usuario pregunte sobre lugares para comer en ese destino
+        :return Texto de las comidas tipicas del lugar de acuerdo con opiniones en tripadvisor.com.mx
+        :rtype str
+        '''
+        lista_restaurantes = []
+        for restaurantes in restaurantesCancun:
+            lista_restaurantes.append(restaurantes['nombre'].title())
+        respuesta = '\n\n -'.join(lista_restaurantes).upper()
+        if not respuesta:
+            return 'No se encuentran disponibles los restaurantes de la zona'
+        return respuesta  
+
+    def get_atractivosCancun(self):
+        '''
+        Devuelve una lista con los atractivos turísticos de Cancun
+        Responde al intent = 'recomendaciones lugares Cancun'
+        Cuando el usuario pregunta sobre atractivos turísiticos o lugares históricos
+        :return Texto de los atractivos turísticos de Cancun
+        :rtype str
+        '''
+        lista_lugares = []
+        for lugares in atractivosCancun:
             lista_lugares.append(lugares['nombre'].title())
         respuesta = '\n\n -'.join(lista_lugares).upper()
         if not respuesta:
@@ -337,6 +479,30 @@ conocimiento = [
             'Excelente, ¿Tenemos disponible la lista de hoteles, deseas verla?'
         ]
     },
+    
+    {
+        'intent': 'reservar hotel cancun',
+        'regex': [
+            r'Quiero (.*) hotel (.*)',
+            r'Quisiera (.*) hotel (.*)'
+        ],
+        'respuesta': [
+            '¿Quieres realizar una reservación para un hotel en ese destino?',
+            '¿Deseas que haga una reservación para un hotel para ese destino?'
+        ]
+    },
+    {
+        'intent': 'reservar hotel personas cancun',
+        'regex': [
+            r'Para (1|2|3|4|5|6|7|8|9|10) (.*)',
+            r'(1|2|3|4|5|6|7|8|9|10) (.*)',
+            r'(1|2|3|4|5|6|7|8|9|10)'
+        ],
+        'respuesta': [
+            'Excelente, ¿Tenemos disponible la lista de hoteles, deseas verla?'
+        ]
+    },
+    
     {
         'intent': 'recomendaciones huatulco restaurante',
         'regex': [
@@ -427,6 +593,15 @@ conocimiento = [
         ]
     },
     {
+        'intent': 'huatulco',
+        'regex': [
+            r'Huatulco'
+        ],
+        'respuesta': [
+            'Excelente lugar para descansar, disfrutar la playa y una bebida referscante'
+        ]
+    },
+    {
         'intent': 'ir huatulco',
         'regex': [
             r'Quiero (.*) Huatulco',
@@ -440,6 +615,206 @@ conocimiento = [
     },
     
     # INFORMACION REFERENTE A HUATULCO FIN
+    
+    # INFORMACIÓN REFERENTE A CANCUN INICIO
+    {
+        'intent': 'hoteles cancun',
+        'regex': [
+            r'(Que|Qué|Cuáles|Cuales|Quiero|Quisiera|Dime) (.*) hoteles (.*) Cancun'
+        ],
+        'respuesta': [
+            'La lista de hoteles diponibles te la muestro a continuación:'
+        ]
+    },
+    {
+        'intent': 'que hotel cancun',
+        'regex': [
+            r'.*Secrets The Vine Cancún.*',
+            r'.*Hyatt Ziva Cancún.*',
+            r'.*Crown Paradise Club Cancun.*'
+            r'.*Live Aqua Beach Resort Cancún.*'
+        ],
+        'respuesta': [
+            'Excelente, ¿Me puedes indicar la fecha de llegada al destino? Por favor utiliza el formato: "DD MES YYYY".'
+        ]
+    },
+    {
+        'intent': 'hotel cancun fecha inicio',
+        'regex': [
+            r'[\d]{1,2} [ADFJMNOS]\w* [\d]{4}'
+        ],
+        'respuesta': [
+            'Muy bien, ahora indicame cuantos días quieres quedarte en tu destino de la forma: "# dias"'
+        ]
+    },
+    {
+        'intent': 'hotel cancun fecha fin',
+        'regex': [
+            r'.* dias'
+        ],
+        'respuesta': [
+            'Perfecto tu reservación se ha hecho satisfacotiramente \n ¿Puedo ayudarte con algo más?',
+            'Muy bien, genero la reservación de hotel para esas fechas en ese destino. ¿Te puedo ayudar en algo más?'
+        ]
+    },
+    {
+        'intent': 'reservar hotel',
+        'regex': [
+            r'Quiero (.*) hotel (.*)',
+            r'Quisiera (.*) hotel (.*)'
+        ],
+        'respuesta': [
+            '¿Quieres realizar una reservación para un hotel en ese destino?',
+            '¿Deseas que haga una reservación para un hotel para ese destino?'
+        ]
+    },
+    {
+        'intent': 'reservar hotel personas',
+        'regex': [
+            r'Para (1|2|3|4|5|6|7|8|9|10) (.*)',
+            r'(1|2|3|4|5|6|7|8|9|10) (.*)',
+            r'(1|2|3|4|5|6|7|8|9|10)'
+        ],
+        'respuesta': [
+            'Excelente, ¿Tenemos disponible la lista de hoteles, deseas verla?'
+        ]
+    },
+    
+    {
+        'intent': 'reservar hotel cancun',
+        'regex': [
+            r'Quiero (.*) hotel (.*)',
+            r'Quisiera (.*) hotel (.*)'
+        ],
+        'respuesta': [
+            '¿Quieres realizar una reservación para un hotel en ese destino?',
+            '¿Deseas que haga una reservación para un hotel para ese destino?'
+        ]
+    },
+    {
+        'intent': 'reservar hotel personas cancun',
+        'regex': [
+            r'Para (1|2|3|4|5|6|7|8|9|10) (.*)',
+            r'(1|2|3|4|5|6|7|8|9|10) (.*)',
+            r'(1|2|3|4|5|6|7|8|9|10)'
+        ],
+        'respuesta': [
+            'Excelente, ¿Tenemos disponible la lista de hoteles, deseas verla?'
+        ]
+    },
+    
+    {
+        'intent': 'recomendaciones cancun restaurante',
+        'regex': [
+            r'.* (restaurante|restaurantes) .* cancun',
+            r'.* (restaurantes|restaurante) .* cancun .*',
+            r'(Donde|En que lugar|Algun lugar) .* comer .* cancun .*'
+        ],
+        'respuesta': [
+            'Si quieres comer en un bonito lugar en Cancun, ¿puedo mostrarte los mejores restaurantes de la zona?',
+            '¿Quieres que te muestre una lista con variedad de lugares para comer delicioso en Cancun?'
+        ]    
+    },
+    {
+        'intent': 'recomendaciones cancun comida',
+        'regex': [
+            r'.* que .* (comer|comida) .* cancun.*',
+            r'.* comida tipica .* cancun .*',
+            r'.* comida .* cancun .*',
+            r'.* comida .* cancun',
+            r'.* comer .* cancun'
+        ],
+        'respuesta': [
+            'Cancun ofrece gran variedad gastronomica del estado de Oaxaca, ¿gustas que te muestre la lista de comida tipica del lugar?',
+            '¿Quieres que te muestre una lista con variedad de comida tipica de Cancun?'
+        ]
+    },
+    {
+        'intent': 'recomendaciones cancun lugares',
+        'regex': [
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .* cancun',
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .* cancun .*',
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* (atractivo|atractivo) (turistico|turisticos) .* cancun'
+        ],
+        'respuesta': [
+            'La riqueza histórica y cultural del estado de Quintana Roo es extensa, de este repertorio, una partre se encuentra en Cancun, ¿Quieres que te muestre una lista sitios para visitar?'
+        ]
+    },    
+    {
+        'intent': 'costo vuelo cancun',
+        'regex': [
+            r'(precio|costo) .* vuelo .* cancun .*',
+            r'(Cuanto|Cuánto) .* vuelo .* cancun .*',
+            r'(Cuanto|Cuánto) .* vuelo .* cancun',
+            r'(precio|costo) .* vuelo .* cancun'
+        ],
+        'respuesta': [
+            'Para decirte el costo, dime ¿desde qué estado de la republica quieres viajar?',
+            'Para indicarte el precio podrías decirme por favor ¿de qué estado de la republica quiere viajar?'
+        ]    
+    },
+    {
+        'intent': 'actividades cancun',
+        'regex': [
+            r'(Que|Qué) puedo hacer en Cancun .*',
+            r'(Que|Que) actividades .* Cancun .*',
+            r'(Que|Qué) puedo hacer en Cancun',
+            r'(Que|Que) actividades .* Cancun',
+            r'(Que|Qué) .* hacer .* cancun',
+            r'(Que|Qué) .* hacer .* cancun.*'
+        ],
+        'respuesta': [
+            'Le recomiendo que se adelante a largas colas y al abrasador calor del mediodía en un recorrido con acceso a primera hora a Chichén Itzá desde Cancún, una gran elección para las familias\n¿Puedo ayudarte con otra cosa?.',
+            'Si te encanta nadar y la naturaleza lo tuyo será el recorrido con snorkel en las playas de Cancun, podrás ver cientos de peces de diferentes espcies así como fauna marina \n¿Puedo ayudarte con otra cosa?',
+            'Si lo que buscas es algo más cultural e histórico, puedes recorrer los yacimientos arqueológicos así como el centro de Cancun en busca de artesanias locales \n¿Puedo ayudarte con otra cosa?'
+        ]    
+    },
+    {
+        'intent': 'dar clima cancun',
+        'regex': [
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (clima|tiempo).* Cancun.*',
+            r'.* clima .* Cancun .*'
+        ],
+        'respuesta': [
+            'El clima en Cancun es tropical, cálido y húmedo, temperatura promedio de 26°',
+            '26° promedio durante todo el año, nueblado en verano con algunas precepitaciones pero no deja de ser un clima perfecto para disfrutar la playa'
+        ]
+    },
+    {
+        'intent': 'dar destinos',
+        'regex': [
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (destinos|lugares).*',
+            r'Dime a donde puedo viajar .*'
+        ],
+        'respuesta': [
+            'Te daré la lista de destinos con los que contamos:',
+            'Estos son los lugares en los que te puedo ayudar a realizar una reservación completa:',
+            'Nuestros destinos son las playas más atractivas de México:'
+        ]
+    },
+    {
+        'intent': 'cancun',
+        'regex': [
+            r'Cancun'
+        ],
+        'respuesta': [
+            'Excelente lugar para descansar, disfrutar la playa y una bebida referscante'
+        ]
+    },
+    {
+        'intent': 'ir cancun',
+        'regex': [
+            r'Quiero (.*) Cancun',
+            r'Quisiera (.*) Cancun',
+            r'.*Cancun.*'
+        ],
+        'respuesta': [
+            'Veo que quieres %1 Cancun, ¿qué necesitas que haga por ti?',
+            '¡Cancun!, gran elección para visitar, ¿cómo puedo ayudarte con tu viaje?'
+        ]
+    },
+    
+    # INFORMACION REFERENTE A CANCUN FIN
     {
         'intent': 'ir cancun',
         'regex': [
@@ -532,6 +907,7 @@ destinos = [
     }
 ]
 
+#HUATULCO
 hotelesHuatulco = [
     {
         'nombre': '-Las Brisas Huatulco: $950 la noche por persona, todo incluido',
@@ -602,7 +978,77 @@ atractivosHuatulco = [
     }
 ]
 
+#CANCUN
 
+hotelesCancun = [
+    {
+        'nombre': '-Secrets The Vine Cancún: $6,588 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Hyatt Ziva Cancún: $5,837 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Crown Paradise Club Cancun: $3,313 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Live Aqua Beach Resort Cancún: $6,961 la noche por persona',
+        'estrellas': '5 estrellas'
+    }
+]
+
+comidaTipicaCancun = [
+    {
+        'nombre': 'Quesillo'
+    },
+    {
+        'nombre': 'Chapulines'
+    },
+    {
+        'nombre': 'Cecina enchilada'
+    },
+    {
+        'nombre': 'Chilaquiles'
+    },
+    {
+        'nombre': 'Pescados y mariscos'
+    },
+    {
+        'nombre': 'Pan de nata'
+    }
+]
+
+restaurantesCancun = [
+    {
+        'nombre': '-Bandoneon: La decoración del lugar es preciosa y el lugar es muy limpio.'
+    },
+    {
+        'nombre': 'Taquería Los Chachalacos: Excelente servicio, la comida deliciosa, el chicharrón de queso delicioso, pide la salsa especial.'
+    },
+    {
+        'nombre': 'Rino~s Pizza Time: Excelente lugar para cenar con amigos/familia. La comida es exquisita y sin demoras.'
+    },
+    {
+        'nombre': 'MercaderPeter~s Restaurante: Atención personalizada por el chef y manteniendo un ambiente muy agradable. La comida excelente y terminando con un postre delicioso. No dejar de acudir en su viaje a Cancún.'
+    }
+]
+
+atractivosCancun = [
+    {
+        'nombre': 'Playa Delfines: Una playa con belleza escenica, es una parada obligatoria en tu viaje a la Riviera Maya.'
+    },
+    {
+        'nombre': 'Xoximilco Cancun: Es una experiencia única para conocer y disfrutar de una auténtica fiesta mexicana, con música típica de varios rincones de Mexico, comida y bebida variada y buena y que todo en conjunto.'
+    },
+    {
+        'nombre': 'Dolphin Discovery: Sin duda, el momento más espectacular, es el llamado "Foot Push" donde dos delfines te empujarán por la planta de tus pies a gran velocidad hasta ir "volando" fuera del agua, esta es una experiencia inolvidable.'
+    },
+    {
+        'nombre': 'Chichen Itza: Una de las nuevas 7 maravillas del mundo que no te puedes perder.'
+    }
+]
 
 #----------------------------------------------------------------------
 #  Interfaz de texto
