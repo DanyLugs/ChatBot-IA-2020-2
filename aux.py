@@ -357,6 +357,15 @@ conocimiento = [
         'respuesta': respuesta_elegir_destino
     },
     {
+        'intent': 'cancun',
+        'regex': [
+            r'Quiero (.*) Cancun',
+            r'Quisiera (.*) Cancun',
+            r'.*Cancun.*'
+        ],
+        'respuesta': respuesta_elegir_destino
+    },
+    {
         'intent': 'desconocido',
         'regex': [
             r'.*'
@@ -461,8 +470,90 @@ huatulco = {
         'clima' : [{ 'nombre' : 'El clima en Huatulco es tropical, cálido y húmedo, temperatura promedio de 27°'}]
     }
 
+#CANCUN
+
+hotelesCancun = [
+    {
+        'nombre': '-Secrets The Vine Cancún: $6,588 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Hyatt Ziva Cancún: $5,837 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Crown Paradise Club Cancun: $3,313 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Live Aqua Beach Resort Cancún: $6,961 la noche por persona',
+        'estrellas': '5 estrellas'
+    }
+]
+
+comidaTipicaCancun = [
+    {
+        'nombre': 'Cochinita Pibil'
+    },
+    {
+        'nombre': 'Sopa de Lima'
+    },
+    {
+        'nombre': 'Panuchos'
+    },
+    {
+        'nombre': 'Ceviche'
+    },
+    {
+        'nombre': 'Tacos de pescado'
+    },
+    {
+        'nombre': 'Salbutes'
+    }
+]
+
+restaurantesCancun = [
+    {
+        'nombre': '-Bandoneon: La decoración del lugar es preciosa y el lugar es muy limpio.'
+    },
+    {
+        'nombre': 'Taquería Los Chachalacos: Excelente servicio, la comida deliciosa, el chicharrón de queso delicioso, pide la salsa especial.'
+    },
+    {
+        'nombre': 'Rino~s Pizza Time: Excelente lugar para cenar con amigos/familia. La comida es exquisita y sin demoras.'
+    },
+    {
+        'nombre': 'MercaderPeter~s Restaurante: Atención personalizada por el chef y manteniendo un ambiente muy agradable. La comida excelente y terminando con un postre delicioso. No dejar de acudir en su viaje a Cancún.'
+    }
+]
+
+atractivosCancun = [
+    {
+        'nombre': 'Playa Delfines: Una playa con belleza escenica, es una parada obligatoria en tu viaje a la Riviera Maya.'
+    },
+    {
+        'nombre': 'Xoximilco Cancun: Es una experiencia única para conocer y disfrutar de una auténtica fiesta mexicana, con música típica de varios rincones de Mexico, comida y bebida variada y buena y que todo en conjunto.'
+    },
+    {
+        'nombre': 'Dolphin Discovery: Sin duda, el momento más espectacular, es el llamado "Foot Push" donde dos delfines te empujarán por la planta de tus pies a gran velocidad hasta ir "volando" fuera del agua, esta es una experiencia inolvidable.'
+    },
+    {
+        'nombre': 'Chichen Itza: Una de las nuevas 7 maravillas del mundo que no te puedes perder.'
+    }
+]
+
+cancun = {
+        'nombre' : 'Cancun',
+        'hoteles' : hotelesCancun,
+        'comidas' : comidaTipicaCancun,
+        'restaurantes' : restaurantesCancun,
+        'atractivos' : atractivosCancun,
+        'clima' : 'El clima en Cancun es tropical, cálido y húmedo, temperatura promedio de 26°'
+    }
+
 destinos = {
     1 : huatulco,
+    2 : cancun,
     }
 
 #----------------------------------------------------------------------
