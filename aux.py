@@ -49,14 +49,11 @@ class chatbot:
         intent = caso.get('intent')
         self.identifica_destino(intent)
         self.identifica_contexto(intent) # Asignar contexto, es auxiliar para identificar ciertos casos particulares
-        #informacion_adicional = self.get_extra_info(caso)
+
         print('Intent: ' + intent)
         print('Contexto: ' + self.ctx)
         print('Destino: ' + str(self.destino))
        
-        #informacion_adicional = self.acciones(caso,user_input)
-        #respuesta = random.choice(caso['respuesta'])
-        #respuesta_final = (respuesta + '\n' + informacion_adicional).strip() # Strip quita espacios en blanco al inicio y final del texto
         respuesta_final = self.get_respuesta(caso)
         dic_des = destinos.get(self.destino)
         if dic_des:
@@ -122,11 +119,11 @@ class chatbot:
             return 'El costo de vuelo redondo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'
         if ctx in ['hoteles','clima'] :
             self.ctx = 'default'
-            return self.get_extra_destino(intent)
+            return self.get_extra_destino(ctx)
         if ctx in ['restaurantes','comidas','atractivos'] and intent == 'confirmar':
             if self.user_input.lower() in ['si','sí']:
                 self.ctx = 'default'
-                return self.get_extra_destino(self.ctx)
+                return self.get_extra_destino(ctx)
             else:
                 self.ctx = 'default'
                 return "Ok, regresando al principio..."
@@ -202,7 +199,7 @@ conocimiento = [
     {
         'intent': 'dar destinos',
         'regex': [
-            #r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (destinos|lugares).*',
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).*(destinos|lugares).*',
             r'Dime a donde puedo viajar .*'
         ],
         'respuesta': [
@@ -214,7 +211,7 @@ conocimiento = [
     {
         'intent': 'hoteles',
         'regex': [
-            r'(Que|Qué|Cuáles|Cuales|Quiero|Quisiera|Dime) (.*) hoteles (.*)',
+            r'(Que|Qué|Cuáles|Cuales|Quiero|Quisiera|Dime)(.*)hoteles(.*)',
             r'.*hoteles.*',
             r'.*Hoteles*'
         ],
@@ -225,9 +222,9 @@ conocimiento = [
     {
         'intent': 'restaurantes',
         'regex': [
-            r'.* (restaurante|restaurantes) .*',
-            r'.* (restaurantes|restaurante) .*',
-            r'(Donde|En que lugar|Algun lugar) .* comer .*'
+            r'.*(restaurante|restaurantes).*',
+            r'.*(restaurantes|restaurante).*',
+            r'(Donde|En que lugar|Algun lugar) .* comer.*'
         ],
         'respuesta': [
             'Si quieres comer en un bonito lugar en %1, ¿puedo mostrarte los mejores restaurantes de la zona?',
@@ -261,8 +258,8 @@ conocimiento = [
   {
         'intent': 'clima',
         'regex': [
-            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (clima|tiempo).*',
-            r'.* clima .*'
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).*(clima|tiempo).*',
+            r'.*clima.*'
         ],
         'respuesta': [
             'A continuación una breve descripción del clima de %1'
@@ -280,7 +277,7 @@ conocimiento = [
     {
         'intent': 'hotel fecha fin',
         'regex': [
-            r'.* dias'
+            r'.*dias'
         ],
         'respuesta': [
             'Perfecto tu reservación se ha hecho satisfacotiramente \n ¿Puedo ayudarte con algo más?',
@@ -290,8 +287,8 @@ conocimiento = [
     {
         'intent': 'reservar hotel',
         'regex': [
-            r'Quiero (.*) hotel (.*)',
-            r'Quisiera (.*) hotel (.*)'
+            r'Quiero(.*)hotel(.*)',
+            r'Quisiera(.*)hotel(.*)'
         ],
         'respuesta': [
             '¿Quieres realizar una reservación para un hotel en %1?',
@@ -301,8 +298,8 @@ conocimiento = [
     {
         'intent': 'reservar hotel personas',
         'regex': [
-            r'Para (1|2|3|4|5|6|7|8|9|10) (.*)',
-            r'(1|2|3|4|5|6|7|8|9|10) (.*)',
+            r'Para (1|2|3|4|5|6|7|8|9|10)(.*)',
+            r'(1|2|3|4|5|6|7|8|9|10)(.*)',
             r'(1|2|3|4|5|6|7|8|9|10)'
         ],
         'respuesta': [
@@ -362,6 +359,15 @@ conocimiento = [
             r'Quiero (.*) Cancun',
             r'Quisiera (.*) Cancun',
             r'.*Cancun.*'
+        ],
+        'respuesta': respuesta_elegir_destino
+    },
+    {
+        'intent': 'acapulco',
+        'regex': [
+            r'Quiero (.*) Acapulco',
+            r'Quisiera (.*) Acapulco',
+            r'.*Acapulco.*'
         ],
         'respuesta': respuesta_elegir_destino
     },
@@ -548,12 +554,92 @@ cancun = {
         'comidas' : comidaTipicaCancun,
         'restaurantes' : restaurantesCancun,
         'atractivos' : atractivosCancun,
-        'clima' : 'El clima en Cancun es tropical, cálido y húmedo, temperatura promedio de 26°'
+        'clima' : [{ 'nombre' : 'El clima en Cancun es tropical, cálido y húmedo, temperatura promedio de 26°'}]
     }
+
+#ACAPULCO
+
+hotelesAcapulco = [
+    {
+        'nombre': '-Krystal Beach Acapulco: $950 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Romano Palace: $1,200 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Playa Suites Acapulco: $750 la noche por persona, desayuno incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Las Brisas Acapulco: $1,500 la noche por persona, desayuno incluido',
+        'estrellas': '5 estrellas'
+    }
+]
+
+comidaTipicaAcapulco = [
+    {
+        'nombre': 'Pulpos en su tinta'
+    },
+    {
+        'nombre': 'Pescado a la Talla'
+    },
+    {
+        'nombre': 'Pozole verde'
+    },
+    {
+        'nombre': 'Camarones al mojo de ajo'
+    },
+    {
+        'nombre': 'Ceviche'
+    },
+    {
+        'nombre': 'Sopa de pescados y mariscos'
+    }
+]
+
+restaurantesAcapulco= [
+    {
+        'nombre': '-Carlos and Charlies Acapulco: Muy buena música y un gran ambiente. El mojito es la mejor bebida del lugar!'
+    },
+    {
+        'nombre': 'Lupe de Arena: Un gran lugar para disfrutar de comida mexicanay mariscos.'
+    },
+    {
+        'nombre': 'La Finca Acapulco: Deliciosa paella y como siempre la mejor atención.'
+    },
+]
+
+atractivosAcapulco = [
+    {
+        'nombre': 'La Quebrada: un magnífico espacio de arte y vista en el que podrás evidenciar las actividades de clavadistas para los que no le tienen miedo a la adrenalina.'
+    },
+    {
+        'nombre': 'Parque Papagayo: visita los tres lagos artificiales y sus extensas áreas verdes, donde encontrarte con la diversidad de flora y fauna exótica no será novedad.'
+    },
+    {
+        'nombre': 'Tirolesa Xtasea: la tirolesa más grande del mundo sobre el nivel del mar, te ofrece una altura de 100mts sobre la montaña y 700mts sobre el mar con una longitud de 1800mts.'
+    },
+    {
+        'nombre': 'Grutas de Cacahuamilpa: el lugar de los sistemas de cuevas y formaciones calcáreas que presenta 19 salones de forma natural e iluminados con su respectivo nombre, llenos de estalagmitas y estalactitas, toda una aventura'
+    }
+]
+
+acapulco = {
+        'nombre' : 'Acapulco',
+        'hoteles' : hotelesAcapulco,
+        'comidas' : comidaTipicaAcapulco,
+        'restaurantes' : restaurantesAcapulco,
+        'atractivos' : atractivosAcapulco,
+        'clima' : [{ 'nombre' : 'En Acapulco, la temporada de lluvia es nublada, la temporada seca es parcialmente nublada y es muy caliente y opresivo durante todo el año. Durante el transcurso del año, la temperatura generalmente varía de 21 °C a 32 °C y rara vez baja a menos de 18 °C o sube a más de 33 °C.'}]
+    }
+
 
 destinos = {
     1 : huatulco,
     2 : cancun,
+    3 : acapulco,
     }
 
 #----------------------------------------------------------------------
@@ -566,7 +652,7 @@ def command_interface():
     print('-Huatulco')
     print('-Cancun')
     print('-Acapulco')
-    print('-Puerto Vallarta')
+    #print('-Puerto Vallarta')
     print('='*72)
     print('¿En que te puedo apoyar?')
 

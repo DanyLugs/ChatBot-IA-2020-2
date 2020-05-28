@@ -1,4 +1,3 @@
-#enconding: utf-8
 #----------------------------------------------------------------------
 #  chatbot.py
 #
@@ -17,6 +16,7 @@ import decimal
 from random import randrange
 
 class chatbot:
+
     def __init__(self):
         '''
         El chatbot consta de una base de conocimiento representada como una lista de casos o intents
@@ -26,7 +26,9 @@ class chatbot:
         for caso in conocimiento:
             caso['regex'] = list(map(lambda x:re.compile(x, re.IGNORECASE), caso['regex'])) # compilar las expresiones regulares es óptimo cuando se usan varias veces
             self.conocimiento.append(caso)
-        # self.regexp_match
+        self.destino = 0
+        self.ctx = 'deafult'
+        self.user_input = ""
 
     def responder(self, user_input):
         '''
@@ -42,11 +44,22 @@ class chatbot:
         :return Un texto de respuesta al usuario
         :rtype: str
         '''
+        self.user_input = user_input
         caso = self.encontrar_intent(user_input)
-        self.identifica_contexto(caso) # Asignar contexto, es auxiliar para identificar ciertos casos particulares
-        informacion_adicional = self.acciones(caso, user_input)
-        respuesta = self.convertir_respuesta(random.choice(caso['respuesta']), caso, user_input)
-        respuesta_final = (respuesta + '\n' + informacion_adicional).strip() # Strip quita espacios en blanco al inicio y final del texto
+        intent = caso.get('intent')
+        self.identifica_destino(intent)
+        self.identifica_contexto(intent) # Asignar contexto, es auxiliar para identificar ciertos casos particulares
+
+        print('Intent: ' + intent)
+        print('Contexto: ' + self.ctx)
+        print('Destino: ' + str(self.destino))
+       
+        respuesta_final = self.get_respuesta(caso)
+        dic_des = destinos.get(self.destino)
+        if dic_des:
+            nombre_des = dic_des.get('nombre')
+            if nombre_des:
+                respuesta_final = respuesta_final.replace('%1', nombre_des)
         return respuesta_final
 
     def encontrar_intent(self, user_input):
@@ -65,191 +78,95 @@ class chatbot:
                     return caso
         return {}
 
-    def convertir_respuesta(self, respuesta, caso, user_input):
-        '''
-        Cambia los textos del tipo %1, %2, %3, etc., por su correspondiente propiedad
-        identificada en los grupos parentizados de la expresión regular asociada.
+    def get_respuesta(self,caso):
+        respuesta = ""
+        intent = caso.get('intent')
+        if intent == 'desconocido' and self.ctx == 'reservar hotel':
+            return self.get_extra_contexto(intent)
+        if intent in ['bienvenida','desconocido','dar destinos'] or destinos.get(intent):     
+            respuesta = random.choice(caso['respuesta'])
+            if intent == 'dar destinos':
+                dest = ""
+                for desti in destinos:
+                    dest = dest + desti.get('nombre') + '\n'
+                respuesta = respuesta + '\n' + dest
+            return respuesta
+        if self.destino != 0:
+            respuesta = random.choice(caso['respuesta'])
+            add = self.get_extra_contexto(intent)
+            if add != "":
+                respuesta = respuesta + '\n' + add
+            if respuesta == "":
+                respuesta = "Parece que estas diciendo cosas sin sentido cu cu cu cu o.O"
+            return respuesta
+        return 'Por favor elige un destino primero por favor'
 
-        :param str respuesta: Una respuesta que desea convertirse
-        :param dict caso: El caso o intent asociado a la respuesta
-        :param str user_input: El texto escrito por el usuario
-        :return La respuesta con el cambio de parámetros
-        :rtype: str
-        '''
-        respuesta_cambiada = respuesta
-        intent = caso['intent']
-        match = self.regexp_selected.match(user_input)
-        # if intent == 'bienvenida':
-        #     return respuesta_cambiada
-        if intent == 'ir huatulco':
-            respuesta_cambiada = respuesta_cambiada.replace('%1', match.group(1))
-        return respuesta_cambiada
+    def identifica_destino(self, intent):
+        new_destino = destinosNi.get(intent)
+        if new_destino:
+            self.destino = new_destino
 
-    def acciones(self, caso, user_input):
-        '''
-        Obtiene información adicional necesaria para dar una respuesta coherente al usuario.
-        El tipo de acciones puede ser una consulta de información, revisar base de datos, generar
-        un código, etc. y el resultado final es expresado como una cadena de texto
+    def identifica_contexto(self,intent):
+        if not (intent in ['confirmar','estado','reservar hotel personas','hotel fecha inicio','hotel fecha fin','desconocido']):
+            self.ctx = intent
+            
+        
 
-        :param dict caso: El caso o intent asociado a la respuesta
-        :return Texto que representa información adicional para complementar la respuesta al usuario
-        :rtype: str
-        '''
-        intent = caso['intent']
-        if intent == 'dar destinos':
-            return self.get_destinos()
-        elif intent == 'hoteles huatulco':
-            return self.get_hotelesHuatulco()        
-        elif intent == 'confirmar' or intent == 'estado':
-            return self.da_respuesta_apropiada(user_input)     
-        return ''
-
-    def identifica_contexto(self, caso):
-        intent = caso['intent']
-        if intent == 'reservar hotel':
-            self.contexto = 'HOTEL'
-        elif intent == 'confirmar':
-            self.contexto = 'DESTINO'
-        elif intent == 'reservar hotel personas':
-            self.contexto = 'CUANTAS_PERSONAS'
-        elif intent == 'recomendaciones huatulco comida':
-            self.contexto = 'COMIDA_HUATULCO'
-        elif intent == 'recomendaciones huatulco restaurante':
-            self.contexto = 'RESTAURANTE_HUATULCO'   
-        elif intent == 'recomendaciones huatulco lugares':
-            self.contexto = 'LUGARES_HUATULCO'
-        elif intent == 'costo vuelo huatulco':
-            self.contexto = 'VUELO_HUATULCO'    
-
-    def da_respuesta_apropiada(self, user_input):
-        if self.contexto == 'HOTEL':
-            if user_input.lower() == 'si' or user_input.lower() == 'sí':
-                self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
-                return 'Claro, ¿Para cuantas personas necesita su reservación de hotel en Huatulco?'
+    def get_extra_contexto(self, intent):
+        ctx = self.ctx
+        if ctx == 'costo vuelo' and intent == 'estado':   
+            self.ctx = 'default'
+            return 'El costo de vuelo redondo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'
+        if ctx in ['hoteles','clima'] :
+            self.ctx = 'default'
+            return self.get_extra_destino(ctx)
+        if ctx in ['restaurantes','comidas','atractivos'] and intent == 'confirmar':
+            if self.user_input.lower() in ['si','sí']:
+                self.ctx = 'default'
+                return self.get_extra_destino(ctx)
             else:
-                self.contexto = 'DEFAULT' # Devolver el contexto a default para que el siguiente Sí/No ya no tenga que ver con las pizzas
-                return 'Reservacion cancelada, ¿qué puedo hacer por ti?'
-        elif self.contexto == 'CUANTAS_PERSONAS':
-            if user_input.lower() == 'si' or user_input.lower() == 'sí':
-                self.contexto = 'DEFAULT'
-                return 'De acuerdo, te muestro la lista de hoteles disponibles en ese destino: \n' + self.get_hotelesHuatulco()
-            else:
-                self.contexto = 'DEFAULT'
-                return 'He cancelado la reservación, ¿Necesitas que haga algo más?'
-        elif self.contexto == 'COMIDA_HUATULCO':
-            if user_input.lower() == 'si' or user_input.lower() == 'sí':
-                self.contexto = 'DEFAULT'
-                return 'Aqui tienes la lista de comida tipica del lugar: \n' + self.get_comidaTipicaHuatulco()
-            else:
-                self.contexto = 'DEFAULT'
-                return '¿En qué más puedo ayduarte?'    
-        elif self.contexto == 'RESTAURANTE_HUATULCO':
-            if user_input.lower() == 'si' or user_input.lower() == 'sí':
-                self.contexto = 'DEFAULT'
-                return 'Estos son los mejores restaurantes de Huatulco: \n' + self.get_restaurantesHuatulco() + '\n¿Puedo ayudarte con otra cosa?'
-            else:
-                self.contexto = 'DEFAULT'
-                return '¿En qué más puedo ayduarte?'   
-        elif self.contexto == 'LUGARES_HUATULCO':
-            if user_input.lower() == 'si' or user_input.lower() == 'sí':
-                self.contexto = 'DEFAULT'
-                return 'Te recomiendo visitar las playas muy tranquilas de Huatulco, el centro donde puedes encontrar artesanias locales y comida típica, además aquí tienes una lista de algunos lugares que debes visitar si vas a Huatulco: \n' + self.get_atractivosHuatulco() + '\n\n¿Puedo ayudarte con otra cosa?'             
-            else:
-                self.contexto = 'DEFAULT'
-                return 'En qué más puedo ayudarte?'  
-        elif self.contexto == 'VUELO_HUATULCO':
-            if user_input.lower() == 'CDMX':
-                self.contexto = 'DEFAULT'
-                return 'El costo de vuelo redondo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'
-            else: 
-                self.contexto = 'DEFAULT'
-                return 'El precio del vuelo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'    
-        elif self.contexto == 'DEFAULT':
-            return 'No comprendí lo que dices. ¿Qué necesitas?'
-        else:
-            return 'No comprendí lo que dices. ¿Qué necesitas?'        
+                self.ctx = 'default'
+                return "Ok, regresando al principio..."
+        if ctx == 'reservar hotel':
+            if intent == 'confirmar':
+                if self.user_input.lower() in ['si','sí']:
+                    return 'Favor de seleccionar un hotel de la lista de hoteles en %1 (No escriba la palabra %1)' + '\n' + self.get_extra_destino('hoteles')
+                else:
+                    self.ctx = 'default'
+                    return "Ok, regresando al principio..."
+            if intent == 'desconocido':
+                for hotel in destinos.get(self.destino).get("hoteles"):
+                    if hotel.get('nombre').find(self.user_input)>=0:
+                        print(hotel.get('nombre'))
+                        return "Genial! Por favor dime para cuantas personas es la reservacion"
+                return 'Lo siento ese hotel no fue detectado, asugurese de escribir de forma correcta el nombre del hotel (No escriba la palabra %1)\n' +  self.get_extra_destino('hoteles')
+            if intent == 'hotel fecha fin':
+                self.ctx = 'default'
+                return "..."
+        return ""
 
-    def get_destinos(self):
+    def get_extra_destino(self, intent):
         '''
-        Devuelve una lista de los destinos disponibles de los cuales el bot tiene 
-        información al respecto para dar al usuario.
-        Representa un ejemplo de consulta de información o acciones en el flujo
-        para construir una respuesta del chatbot
-        :return Texto de los destinos turísiticos
-        :rtype str
-        '''
-        lista_lugares = []
-        for lugares in destinos:
-            lista_lugares.append(lugares['nombre'].title())
-        respuesta = ', '.join(lista_lugares)
-        if not respuesta:
-            return 'Por el momento no tenemos disponible ningún destino'
-        return respuesta
-
-    def get_hotelesHuatulco(self):
-        '''
-        Devuelve una lista de los hoteles en Huatulco exclusivamente
+        Devuelve una lista de los en un destino exclusivamente
         :return Texto de los hoteles disponibles en Huatulco
         :rtype str
         '''
-        lista_hoteles = []
-        for hoteles in hotelesHuatulco:
-            lista_hoteles.append(hoteles['nombre'].title())
-        respuesta = '\n\n -'.join(lista_hoteles)
-        if not respuesta:
-            return 'Por el momento no tenemos hoteles disponibles en Huatulco'
-        return respuesta
-
-    def get_comidaTipicaHuatulco(self):
-        '''
-        Devuelve una lista con la comida tipica de Huatulco
-        Responde al intent = 'recomendaciones huatulco comida'
-        Cuando el usuario pregunta por comida en ese destino
-        :return Texto de las comidas tipicas del lugar según mexicodestinos.com
-        :rtype str
-        ''' 
-        lista_comida = []
-        for comida in comidaTipicaHuatulco:
-            lista_comida.append(comida['nombre'].title())
-        respuesta = ', '.join(lista_comida)
-        if not respuesta:
-            return 'No se encuentra disponible la lista de comida tipica de Huatulco en este momento'
-        return respuesta 
-
-    def get_restaurantesHuatulco(self):
-        '''
-        Devuelve una lista con los mejores restaurantes de Huatulco
-        Responde al intent = 'recomendaciones huatulco restaurante'
-        Cuando el usuario pregunte sobre lugares para comer en ese destino
-        :return Texto de las comidas tipicas del lugar de acuerdo con opiniones en tripadvisor.com.mx
-        :rtype str
-        '''
-        lista_restaurantes = []
-        for restaurantes in restaurantesHuatulco:
-            lista_restaurantes.append(restaurantes['nombre'].title())
-        respuesta = '\n\n -'.join(lista_restaurantes).upper()
-        if not respuesta:
-            return 'No se encuentran disponibles los restaurantes de la zona'
-        return respuesta  
-
-    def get_atractivosHuatulco(self):
-        '''
-        Devuelve una lista con los atractivos turísticos de Huatulco
-        Responde al intent = 'recomendaciones lugares huatulco'
-        Cuando el usuario pregunta sobre atractivos turísiticos o lugares históricos
-        :return Texto de los atractivos turísticos de Huatulco
-        :rtype str
-        '''
-        lista_lugares = []
-        for lugares in atractivosHuatulco:
-            lista_lugares.append(lugares['nombre'].title())
-        respuesta = '\n\n -'.join(lista_lugares).upper()
-        if not respuesta:
-            return 'No se encuentra disponible la lista de lugares turísiticos'
-        return respuesta  
+        lista_resp = []
+        intent_inf = destinos.get(self.destino) 
+        if intent_inf:
+            lista_inf = intent_inf.get(intent)
+            if lista_inf:
+                for elem in lista_inf:
+                    lista_resp.append(elem['nombre'].title())
+                respuesta = '\n -'.join(lista_resp)
+                if not respuesta:
+                    return 'Por el momento no tenemos información sobre lo que busca disponible en %1'
+                return respuesta
+        return ''  
 
     def generar_cantidad(self):
-        return '{}'.format(decimal.Decimal(random.randrange(150000, 450000))/100)          
+        return '{}'.format(decimal.Decimal(random.randrange(150000, 450000))/100)  
+
 #----------------------------------------------------------------------
 # Base de conocimiento
 # La base de conocimiento representa una lista de todos los casos o intents
@@ -260,6 +177,11 @@ class chatbot:
 # - regex: Lista de posibles expresiones regulares asociadas al intent, donde los parámetros se obtienen del texto parentizado en la expresión regular
 # - respuesta: Lista de posibles respuestas al usuario, indicando los parámetros obtenidos con la notación %1, %2, %3, etc para cada parámetro
 #----------------------------------------------------------------------
+respuesta_elegir_destino = [
+            'Veo que quieres ir %1, ¿qué necesitas que haga por ti?',
+            '¡%1!, gran elección para visitar, ¿cómo puedo ayudarte con tu viaje?'
+        ]
+
 conocimiento = [
     {
         'intent': 'bienvenida',
@@ -274,151 +196,10 @@ conocimiento = [
             'Hola, ¿Cómo te puedo apoyar?'
         ]
     },
-
-    # INFORMACIÓN REFERENTE A HUATULCO INICIO
-    {
-        'intent': 'hoteles huatulco',
-        'regex': [
-            r'(Que|Qué|Cuáles|Cuales|Quiero|Quisiera|Dime) (.*) hoteles (.*) Huatulco'
-        ],
-        'respuesta': [
-            'La lista de hoteles diponibles te la muestro a continuación:'
-        ]
-    },
-    {
-        'intent': 'que hotel huatulco',
-        'regex': [
-            r'.*Las Brisas Huatulco.*',
-            r'.*El Barcelo.*',
-            r'.*Camino Real Zaashila.*'
-            r'.*Secrets Huatulco Resort & Spa.*'
-        ],
-        'respuesta': [
-            'Excelente, ¿Me puedes indicar la fecha de llegada al destino? Por favor utiliza el formato: "DD MES YYYY".'
-        ]
-    },
-    {
-        'intent': 'hotel huatulco fecha inicio',
-        'regex': [
-            r'[\d]{1,2} [ADFJMNOS]\w* [\d]{4}'
-        ],
-        'respuesta': [
-            'Muy bien, ahora indicame cuantos días quieres quedarte en tu destino de la forma: "# dias"'
-        ]
-    },
-    {
-        'intent': 'hotel huatulco fecha fin',
-        'regex': [
-            r'.* dias'
-        ],
-        'respuesta': [
-            'Perfecto tu reservación se ha hecho satisfacotiramente \n ¿Puedo ayudarte con algo más?',
-            'Muy bien, genero la reservación de hotel para esas fechas en ese destino. ¿Te puedo ayudar en algo más?'
-        ]
-    },
-    {
-        'intent': 'reservar hotel',
-        'regex': [
-            r'Quiero (.*) hotel (.*)',
-            r'Quisiera (.*) hotel (.*)'
-        ],
-        'respuesta': [
-            '¿Quieres realizar una reservación para un hotel en ese destino?',
-            '¿Deseas que haga una reservación para un hotel para ese destino?'
-        ]
-    },
-    {
-        'intent': 'reservar hotel personas',
-        'regex': [
-            r'Para (1|2|3|4|5|6|7|8|9|10) (.*)',
-            r'(1|2|3|4|5|6|7|8|9|10) (.*)',
-            r'(1|2|3|4|5|6|7|8|9|10)'
-        ],
-        'respuesta': [
-            'Excelente, ¿Tenemos disponible la lista de hoteles, deseas verla?'
-        ]
-    },
-    {
-        'intent': 'recomendaciones huatulco restaurante',
-        'regex': [
-            r'.* (restaurante|restaurantes) .* huatulco',
-            r'.* (restaurantes|restaurante) .* huatulco .*',
-            r'(Donde|En que lugar|Algun lugar) .* comer .* huatulco .*'
-        ],
-        'respuesta': [
-            'Si quieres comer en un bonito lugar en Huatulco, ¿puedo mostrarte los mejores restaurantes de la zona?',
-            '¿Quieres que te muestre una lista con variedad de lugares para comer delicioso en Huatulco?'
-        ]    
-    },
-    {
-        'intent': 'recomendaciones huatulco comida',
-        'regex': [
-            r'.* que .* (comer|comida) .* huatulco.*',
-            r'.* comida tipica .* huatulco .*',
-            r'.* comida .* huatulco .*',
-            r'.* comida .* huatulco',
-            r'.* comer .* huatulco'
-        ],
-        'respuesta': [
-            'Huatulco ofrece gran variedad gastronomica del estado de Oaxaca, ¿gustas que te muestre la lista de comida tipica del lugar?',
-            '¿Quieres que te muestre una lista con variedad de comida tipica de Huatulco?'
-        ]
-    },
-    {
-        'intent': 'recomendaciones huatulco lugares',
-        'regex': [
-            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .* huatulco',
-            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .* huatulco .*',
-            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* (atractivo|atractivo) (turistico|turisticos) .* huatulco'
-        ],
-        'respuesta': [
-            'La riqueza histórica y cultural del estado de Oaxaca es extensa, de este repertorio, una partre se encuentra en Huatulco, ¿Quieres que te muestre una lista sitios para visitar?'
-        ]
-    },    
-    {
-        'intent': 'costo vuelo huatulco',
-        'regex': [
-            r'(precio|costo) .* vuelo .* huatulco .*',
-            r'(Cuanto|Cuánto) .* vuelo .* huatulco .*',
-            r'(Cuanto|Cuánto) .* vuelo .* huatulco',
-            r'(precio|costo) .* vuelo .* huatulco'
-        ],
-        'respuesta': [
-            'Para decirte el costo, dime ¿desde qué estado de la republica quieres viajar?',
-            'Para indicarte el precio podrías decirme por favor ¿de qué estado de la republica quiere viajar?'
-        ]    
-    },
-    {
-        'intent': 'actividades huatulco',
-        'regex': [
-            r'(Que|Qué) puedo hacer en Huatulco .*',
-            r'(Que|Que) actividades .* Huatulco .*',
-            r'(Que|Qué) puedo hacer en Huatulco',
-            r'(Que|Que) actividades .* Huatulco',
-            r'(Que|Qué) .* hacer .* huatulco',
-            r'(Que|Qué) .* hacer .* huatulco.*'
-        ],
-        'respuesta': [
-            'Yo te recomiendo dar el tour por las Bahías de Huatulco, aquí podrás encontrar las playas más bonitas y solitarias de todo Huatulco \n¿Puedo ayudarte con otra cosa?',
-            'Si te encanta nadar y la naturaleza lo tuyo será el recorrido con snorkel en las playas de Huatulco, podrás ver cientos de peces de diferentes espcies así como fauna marina \n¿Puedo ayudarte con otra cosa?',
-            'Si lo que buscas es algo más cultural e histórico, puedes recorrer los yacimientos arqueológicos así como el centro de Huatulco en busca de artesanias locales \n¿Puedo ayudarte con otra cosa?'
-        ]    
-    },
-    {
-        'intent': 'dar clima huatulco',
-        'regex': [
-            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (clima|tiempo).* Huatulco.*',
-            r'.* clima .* Huatulco .*'
-        ],
-        'respuesta': [
-            'El clima en Huatulco es tropical, cálido y húmedo, temperatura promedio de 27°',
-            '27° promedio durante todo el año, nueblado en verano con algunas precepitaciones pero no deja de ser un clima perfecto para disfrutar la playa'
-        ]
-    },
     {
         'intent': 'dar destinos',
         'regex': [
-            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).* (destinos|lugares).*',
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).*(destinos|lugares).*',
             r'Dime a donde puedo viajar .*'
         ],
         'respuesta': [
@@ -428,63 +209,115 @@ conocimiento = [
         ]
     },
     {
-        'intent': 'huatulco',
+        'intent': 'hoteles',
         'regex': [
-            r'Huatulco'
+            r'(Que|Qué|Cuáles|Cuales|Quiero|Quisiera|Dime)(.*)hoteles(.*)',
+            r'.*hoteles.*',
+            r'.*Hoteles*'
         ],
         'respuesta': [
-            'Excelente lugar para descansar, disfrutar la playa y una bebida referscante'
+            'La lista de hoteles diponibles te la muestro a continuación:'
         ]
     },
     {
-        'intent': 'ir huatulco',
+        'intent': 'restaurantes',
         'regex': [
-            r'Quiero (.*) Huatulco',
-            r'Quisiera (.*) Huatulco',
-            r'.*Huatulco.*'
+            r'.*(restaurante|restaurantes).*',
+            r'.*(restaurantes|restaurante).*',
+            r'(Donde|En que lugar|Algun lugar) .* comer.*'
         ],
         'respuesta': [
-            'Veo que quieres %1 Huatulco, ¿qué necesitas que haga por ti?',
-            '¡Huatulco!, gran elección para visitar, ¿cómo puedo ayudarte con tu viaje?'
-        ]
-    },
-    
-    # INFORMACION REFERENTE A HUATULCO FIN
-    {
-        'intent': 'ir cancun',
-        'regex': [
-            r'Quiero (.*) Cancun',
-            r'Quisiera (.*) Cancun',
-            r'.*Cancun.*'
-        ],
-        'respuesta': [
-            'Veo que quieres %1 Cancun, ¿qué necesitas que haga por ti?',
-            '¡Cancun!, gran elección para visitar, ¿cómo puedo ayudarte con tu viaje?'
-        ]
+            'Si quieres comer en un bonito lugar en %1, ¿puedo mostrarte los mejores restaurantes de la zona?',
+            '¿Quieres que te muestre una lista con variedad de lugares para comer delicioso en %1?'
+        ]    
     },
     {
-        'intent': 'ir acapulco',
+        'intent': 'comidas',
         'regex': [
-            r'Quiero (.*) Acapulco',
-            r'Quisiera (.*) Acapulco',
-            r'.*Acapulco.*'
+            r'.*que .* (comer|comida).*',
+            r'.*comida tipica.*',
+            r'.*comida.*',
+            r'.*comer.*'
         ],
         'respuesta': [
-            'Veo que quieres %1 Acapulco, ¿qué necesitas que haga por ti?',
-            '¡Acapulco!, gran elección para visitar, ¿cómo puedo ayudarte con tu viaje?'
+            '%1 ofrece gran variedad gastronomica, ¿gustas que te muestre la lista de comida tipica del lugar?',
+            '¿Quieres que te muestre una lista con variedad de comida tipica de %1?'
         ]
     },
     {
-        'intent': 'ir puerto vallarta',
+        'intent': 'atractivos',
         'regex': [
-            r'Quiero (.*) Puerto Vallarta',
-            r'Quisiera (.*) Puerto Vallarta',
-            r'.*Puerto Vallarta.*'
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .*',
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .*',
+            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* (atractivo|atractivo) (turistico|turisticos) .*'
         ],
         'respuesta': [
-            'Veo que quieres %1 Puerto Vallarta, ¿qué necesitas que haga por ti?',
-            'Puerto Vallarta!, gran elección para visitar, ¿cómo puedo ayudarte con tu viaje?'
+            '¿Quieres que te muestre una lista de lugares increibles para visitar en %1'
         ]
+    }, 
+  {
+        'intent': 'clima',
+        'regex': [
+            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).*(clima|tiempo).*',
+            r'.*clima.*'
+        ],
+        'respuesta': [
+            'A continuación una breve descripción del clima de %1'
+        ]
+    },
+    {
+        'intent': 'hotel fecha inicio',
+        'regex': [
+            r'[\d]{1,2} [ADFJMNOS]\w* [\d]{4}'
+        ],
+        'respuesta': [
+            'Muy bien, ahora indicame cuantos días quieres quedarte en tu destino de la forma: "# dias"'
+        ]
+    },
+    {
+        'intent': 'hotel fecha fin',
+        'regex': [
+            r'.*dias'
+        ],
+        'respuesta': [
+            'Perfecto tu reservación se ha hecho satisfacotiramente \n ¿Puedo ayudarte con algo más?',
+            'Muy bien, genero la reservación de hotel para esas fechas en ese destino. ¿Te puedo ayudar en algo más?'
+        ]
+    },
+    {
+        'intent': 'reservar hotel',
+        'regex': [
+            r'Quiero(.*)hotel(.*)',
+            r'Quisiera(.*)hotel(.*)'
+        ],
+        'respuesta': [
+            '¿Quieres realizar una reservación para un hotel en %1?',
+            '¿Deseas que haga una reservación para un hotel en %1?'
+        ]
+    },
+    {
+        'intent': 'reservar hotel personas',
+        'regex': [
+            r'Para (1|2|3|4|5|6|7|8|9|10)(.*)',
+            r'(1|2|3|4|5|6|7|8|9|10)(.*)',
+            r'(1|2|3|4|5|6|7|8|9|10)'
+        ],
+        'respuesta': [
+            'Excelente, Ahora indicame la fecha de salida en formato DD MES AAAA'
+        ]
+    },
+    {
+        'intent': 'costo vuelo',
+        'regex': [
+            r'(precio|costo) .*vuelo.*',
+            r'(Cuanto|Cuánto) .* vuelo.*',
+            r'(Cuanto|Cuánto) .* vuelo .*',
+            r'(precio|costo) .* vuelo .*'
+        ],
+        'respuesta': [
+            'Para decirte el costo, dime ¿desde qué estado de la republica quieres viajar?',
+            'Para indicarte el precio podrías decirme por favor ¿de qué estado de la republica quiere viajar?'
+        ]    
     },
     {
         'intent': 'estado',
@@ -501,6 +334,8 @@ conocimiento = [
         'regex': [
             r'Sí',
             r'Si',
+            r'si',
+            r'sí',
             r'No',
             r'No sé',
             r'No se'
@@ -508,6 +343,33 @@ conocimiento = [
         'respuesta': [
             '' # A priori no se puede dar una respuesta, se debe considerar el contexto (ver la función self.da_respuesta_apropiada())
         ]
+    },
+    {
+        'intent': 'huatulco',
+        'regex': [
+            r'Quiero (.*) Huatulco',
+            r'Quisiera (.*) Huatulco',
+            r'.*Huatulco.*'
+        ],
+        'respuesta': respuesta_elegir_destino
+    },
+    {
+        'intent': 'cancun',
+        'regex': [
+            r'Quiero (.*) Cancun',
+            r'Quisiera (.*) Cancun',
+            r'.*Cancun.*'
+        ],
+        'respuesta': respuesta_elegir_destino
+    },
+    {
+        'intent': 'acapulco',
+        'regex': [
+            r'Quiero (.*) Acapulco',
+            r'Quisiera (.*) Acapulco',
+            r'.*Acapulco.*'
+        ],
+        'respuesta': respuesta_elegir_destino
     },
     {
         'intent': 'desconocido',
@@ -519,7 +381,9 @@ conocimiento = [
             'Podrías reformular tu pregunta por favor'
             '¿Puedes decir lo mismo con otras palabras?'
         ]
-    }
+    },
+       
+  
 ]
 
 #----------------------------------------------------------------------
@@ -527,20 +391,11 @@ conocimiento = [
 # Ejemplo de información que podría consultarse de manera externa,
 # ser generada, o auxiliar en la redacción de una respuesta del chatbot.
 #----------------------------------------------------------------------
-destinos = [
-    {
-        'nombre': 'Huatulco'
-    },
-    {
-        'nombre': 'Cancun'
-    },
-    {
-        'nombre': 'Acapulco'
-    },
-    {
-        'nombre': 'Puerto Vallarta'
-    }
-]
+destinosNi = {
+            "huatulco" : 1,
+            "cancun" : 2,
+            "acapulco" : 3,
+        }
 
 hotelesHuatulco = [
     {
@@ -612,7 +467,180 @@ atractivosHuatulco = [
     }
 ]
 
+huatulco = {
+        'nombre' : 'Huatulco',
+        'hoteles' : hotelesHuatulco,
+        'comidas' : comidaTipicaHuatulco,
+        'restaurantes' : restaurantesHuatulco,
+        'atractivos' : atractivosHuatulco,
+        'clima' : [{ 'nombre' : 'El clima en Huatulco es tropical, cálido y húmedo, temperatura promedio de 27°'}]
+    }
 
+#CANCUN
+
+hotelesCancun = [
+    {
+        'nombre': '-Secrets The Vine Cancún: $6,588 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Hyatt Ziva Cancún: $5,837 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Crown Paradise Club Cancun: $3,313 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Live Aqua Beach Resort Cancún: $6,961 la noche por persona',
+        'estrellas': '5 estrellas'
+    }
+]
+
+comidaTipicaCancun = [
+    {
+        'nombre': 'Cochinita Pibil'
+    },
+    {
+        'nombre': 'Sopa de Lima'
+    },
+    {
+        'nombre': 'Panuchos'
+    },
+    {
+        'nombre': 'Ceviche'
+    },
+    {
+        'nombre': 'Tacos de pescado'
+    },
+    {
+        'nombre': 'Salbutes'
+    }
+]
+
+restaurantesCancun = [
+    {
+        'nombre': '-Bandoneon: La decoración del lugar es preciosa y el lugar es muy limpio.'
+    },
+    {
+        'nombre': 'Taquería Los Chachalacos: Excelente servicio, la comida deliciosa, el chicharrón de queso delicioso, pide la salsa especial.'
+    },
+    {
+        'nombre': 'Rino~s Pizza Time: Excelente lugar para cenar con amigos/familia. La comida es exquisita y sin demoras.'
+    },
+    {
+        'nombre': 'MercaderPeter~s Restaurante: Atención personalizada por el chef y manteniendo un ambiente muy agradable. La comida excelente y terminando con un postre delicioso. No dejar de acudir en su viaje a Cancún.'
+    }
+]
+
+atractivosCancun = [
+    {
+        'nombre': 'Playa Delfines: Una playa con belleza escenica, es una parada obligatoria en tu viaje a la Riviera Maya.'
+    },
+    {
+        'nombre': 'Xoximilco Cancun: Es una experiencia única para conocer y disfrutar de una auténtica fiesta mexicana, con música típica de varios rincones de Mexico, comida y bebida variada y buena y que todo en conjunto.'
+    },
+    {
+        'nombre': 'Dolphin Discovery: Sin duda, el momento más espectacular, es el llamado "Foot Push" donde dos delfines te empujarán por la planta de tus pies a gran velocidad hasta ir "volando" fuera del agua, esta es una experiencia inolvidable.'
+    },
+    {
+        'nombre': 'Chichen Itza: Una de las nuevas 7 maravillas del mundo que no te puedes perder.'
+    }
+]
+
+cancun = {
+        'nombre' : 'Cancun',
+        'hoteles' : hotelesCancun,
+        'comidas' : comidaTipicaCancun,
+        'restaurantes' : restaurantesCancun,
+        'atractivos' : atractivosCancun,
+        'clima' : [{ 'nombre' : 'El clima en Cancun es tropical, cálido y húmedo, temperatura promedio de 26°'}]
+    }
+
+#ACAPULCO
+
+hotelesAcapulco = [
+    {
+        'nombre': '-Krystal Beach Acapulco: $950 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Romano Palace: $1,200 la noche por persona, todo incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Playa Suites Acapulco: $750 la noche por persona, desayuno incluido',
+        'estrellas': '5 estrellas'
+    },
+    {
+        'nombre': 'Las Brisas Acapulco: $1,500 la noche por persona, desayuno incluido',
+        'estrellas': '5 estrellas'
+    }
+]
+
+comidaTipicaAcapulco = [
+    {
+        'nombre': 'Pulpos en su tinta'
+    },
+    {
+        'nombre': 'Pescado a la Talla'
+    },
+    {
+        'nombre': 'Pozole verde'
+    },
+    {
+        'nombre': 'Camarones al mojo de ajo'
+    },
+    {
+        'nombre': 'Ceviche'
+    },
+    {
+        'nombre': 'Sopa de pescados y mariscos'
+    }
+]
+
+restaurantesAcapulco= [
+    {
+        'nombre': '-Carlos and Charlies Acapulco: Muy buena música y un gran ambiente. El mojito es la mejor bebida del lugar!'
+    },
+    {
+        'nombre': 'Lupe de Arena: Un gran lugar para disfrutar de comida mexicanay mariscos.'
+    },
+    {
+        'nombre': 'La Finca Acapulco: Deliciosa paella y como siempre la mejor atención.'
+    },
+]
+
+atractivosAcapulco = [
+    {
+        'nombre': 'La Quebrada: un magnífico espacio de arte y vista en el que podrás evidenciar las actividades de clavadistas para los que no le tienen miedo a la adrenalina.'
+    },
+    {
+        'nombre': 'Parque Papagayo: visita los tres lagos artificiales y sus extensas áreas verdes, donde encontrarte con la diversidad de flora y fauna exótica no será novedad.'
+    },
+    {
+        'nombre': 'Tirolesa Xtasea: la tirolesa más grande del mundo sobre el nivel del mar, te ofrece una altura de 100mts sobre la montaña y 700mts sobre el mar con una longitud de 1800mts.'
+    },
+    {
+        'nombre': 'Grutas de Cacahuamilpa: el lugar de los sistemas de cuevas y formaciones calcáreas que presenta 19 salones de forma natural e iluminados con su respectivo nombre, llenos de estalagmitas y estalactitas, toda una aventura'
+    }
+]
+
+acapulco = {
+        'nombre' : 'Acapulco',
+        'hoteles' : hotelesAcapulco,
+        'comidas' : comidaTipicaAcapulco,
+        'restaurantes' : restaurantesAcapulco,
+        'atractivos' : atractivosAcapulco,
+        'clima' : [{ 'nombre' : 'En Acapulco, la temporada de lluvia es nublada, la temporada seca es parcialmente nublada y es muy caliente y opresivo durante todo el año. Durante el transcurso del año, la temperatura generalmente varía de 21 °C a 32 °C y rara vez baja a menos de 18 °C o sube a más de 33 °C.'}]
+    }
+
+
+destinos = {
+    1 : huatulco,
+    2 : cancun,
+    3 : acapulco,
+    }
 
 #----------------------------------------------------------------------
 #  Interfaz de texto
@@ -624,7 +652,7 @@ def command_interface():
     print('-Huatulco')
     print('-Cancun')
     print('-Acapulco')
-    print('-Puerto Vallarta')
+    #print('-Puerto Vallarta')
     print('='*72)
     print('¿En que te puedo apoyar?')
 
@@ -633,6 +661,7 @@ def command_interface():
     while input_usuario != 'salir':
         try:
             input_usuario = input('> ')
+            #print(destinos.get(1))
         except EOFError:
             print('Saliendo...')
         else:
