@@ -158,7 +158,7 @@ class chatbot:
             if lista_inf:
                 for elem in lista_inf:
                     lista_resp.append(elem['nombre'].title())
-                respuesta = '\n -'.join(lista_resp)
+                respuesta =' -' + '\n -'.join(lista_resp)
                 if not respuesta:
                     return 'Por el momento no tenemos información sobre lo que busca disponible en %1'
                 return respuesta
@@ -400,7 +400,7 @@ destinosNi = {
 
 hotelesHuatulco = [
     {
-        'nombre': '-Las Brisas Huatulco: $950 la noche por persona, todo incluido',
+        'nombre': 'Las Brisas Huatulco: $950 la noche por persona, todo incluido',
         'estrellas': '5 estrellas'
     },
     {
@@ -440,7 +440,7 @@ comidaTipicaHuatulco = [
 
 restaurantesHuatulco = [
     {
-        'nombre': '-Rocoto: Te recomendamos el carpaccio de res como entrada, filete mignon a la mostaza con tocino de plato fuerte, disfruta con vino tinto de la mejor claidad.'
+        'nombre': 'Rocoto: Te recomendamos el carpaccio de res como entrada, filete mignon a la mostaza con tocino de plato fuerte, disfruta con vino tinto de la mejor claidad.'
     },
     {
         'nombre': 'Mare: Si disfrutas de la comida italiana esta es la opcion para ti, precios accesibles, alimentos de la mejor calidad y atención excepcional.'
@@ -481,7 +481,7 @@ huatulco = {
 
 hotelesCancun = [
     {
-        'nombre': '-Secrets The Vine Cancún: $6,588 la noche por persona, todo incluido',
+        'nombre': 'Secrets The Vine Cancún: $6,588 la noche por persona, todo incluido',
         'estrellas': '5 estrellas'
     },
     {
@@ -521,7 +521,7 @@ comidaTipicaCancun = [
 
 restaurantesCancun = [
     {
-        'nombre': '-Bandoneon: La decoración del lugar es preciosa y el lugar es muy limpio.'
+        'nombre': 'Bandoneon: La decoración del lugar es preciosa y el lugar es muy limpio.'
     },
     {
         'nombre': 'Taquería Los Chachalacos: Excelente servicio, la comida deliciosa, el chicharrón de queso delicioso, pide la salsa especial.'
@@ -562,7 +562,7 @@ cancun = {
 
 hotelesAcapulco = [
     {
-        'nombre': '-Krystal Beach Acapulco: $950 la noche por persona, todo incluido',
+        'nombre': 'Krystal Beach Acapulco: $950 la noche por persona, todo incluido',
         'estrellas': '5 estrellas'
     },
     {
@@ -602,7 +602,7 @@ comidaTipicaAcapulco = [
 
 restaurantesAcapulco= [
     {
-        'nombre': '-Carlos and Charlies Acapulco: Muy buena música y un gran ambiente. El mojito es la mejor bebida del lugar!'
+        'nombre': 'Carlos and Charlies Acapulco: Muy buena música y un gran ambiente. El mojito es la mejor bebida del lugar!'
     },
     {
         'nombre': 'Lupe de Arena: Un gran lugar para disfrutar de comida mexicanay mariscos.'
