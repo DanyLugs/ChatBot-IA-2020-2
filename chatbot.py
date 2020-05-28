@@ -50,9 +50,9 @@ class chatbot:
         self.identifica_destino(intent)
         self.identifica_contexto(intent) # Asignar contexto, es auxiliar para identificar ciertos casos particulares
 
-        print('Intent: ' + intent)
-        print('Contexto: ' + self.ctx)
-        print('Destino: ' + str(self.destino))
+        #print('Intent: ' + intent)
+        #print('Contexto: ' + self.ctx)
+        #print('Destino: ' + str(self.destino))
        
         respuesta_final = self.get_respuesta(caso)
         dic_des = destinos.get(self.destino)
