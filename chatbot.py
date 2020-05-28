@@ -501,7 +501,7 @@ huatulco = {
         'comidas' : comidaTipicaHuatulco,
         'restaurantes' : restaurantesHuatulco,
         'atractivos' : atractivosHuatulco,
-        'actividades' : "agregar aqui",
+        'actividades' : actividadesHuatulco,
         'clima' : [{ 'nombre' : 'El clima en Huatulco es tropical, cálido y húmedo, temperatura promedio de 27°'}]
     }
 
@@ -598,7 +598,7 @@ cancun = {
         'comidas' : comidaTipicaCancun,
         'restaurantes' : restaurantesCancun,
         'atractivos' : atractivosCancun,
-        'actividades' : "agregar aqui",
+        'actividades' : actividadesCancun,
         'clima' : [{ 'nombre' : 'El clima en Cancun es tropical, cálido y húmedo, temperatura promedio de 26°'}]
     }
 
@@ -692,7 +692,7 @@ acapulco = {
         'comidas' : comidaTipicaAcapulco,
         'restaurantes' : restaurantesAcapulco,
         'atractivos' : atractivosAcapulco,
-        'actividades' : "agregar aqui",
+        'actividades' : actividadesAcapulco,
         'clima' : [{ 'nombre' : 'En Acapulco, la temporada de lluvia es nublada, la temporada seca es parcialmente nublada y es muy caliente y opresivo durante todo el año. Durante el transcurso del año, la temperatura generalmente varía de 21 °C a 32 °C y rara vez baja a menos de 18 °C o sube a más de 33 °C.'}]
     }
 
