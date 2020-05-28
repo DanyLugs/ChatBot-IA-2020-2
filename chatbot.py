@@ -87,7 +87,7 @@ class chatbot:
             respuesta = random.choice(caso['respuesta'])
             if intent == 'dar destinos':
                 dest = ""
-                for desti in destinos:
+                for desti in destinos.values():
                     dest = dest + desti.get('nombre') + '\n'
                 respuesta = respuesta + '\n' + dest
             return respuesta
@@ -200,7 +200,8 @@ conocimiento = [
         'intent': 'dar destinos',
         'regex': [
             r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).*(destinos|lugares).*',
-            r'Dime a donde puedo viajar .*'
+            r'Dime a donde puedo viajar.*',
+            r'(.*)destinos(.*)'
         ],
         'respuesta': [
             'Te daré la lista de destinos con los que contamos:',
