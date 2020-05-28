@@ -120,7 +120,7 @@ class chatbot:
         if ctx in ['hoteles','clima'] :
             self.ctx = 'default'
             return self.get_extra_destino(ctx)
-        if ctx in ['restaurantes','comidas','atractivos'] and intent == 'confirmar':
+        if ctx in ['restaurantes','comidas','atractivos','actividades'] and intent == 'confirmar':
             if self.user_input.lower() in ['si','sí']:
                 self.ctx = 'default'
                 return self.get_extra_destino(ctx)
@@ -255,8 +255,19 @@ conocimiento = [
         'respuesta': [
             '¿Quieres que te muestre una lista de lugares increibles para visitar en %1'
         ]
-    }, 
-  {
+    },
+    {
+        'intent': 'actividades',
+        'regex': [
+            r'(Que|Qué|Cuáles|Cuales|Quiero|Quisiera|Dime)(.*)actividades(.*)',
+            r'.*actividades.*',
+            r'.*Actividades*'
+        ],
+        'respuesta': [
+            '¿Quieres que te muestre una lista de actividades increibles por hacer en %1'
+        ]
+    },
+    {
         'intent': 'clima',
         'regex': [
             r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).*(clima|tiempo).*',
@@ -474,6 +485,7 @@ huatulco = {
         'comidas' : comidaTipicaHuatulco,
         'restaurantes' : restaurantesHuatulco,
         'atractivos' : atractivosHuatulco,
+        'actividades' : "agregar aqui",
         'clima' : [{ 'nombre' : 'El clima en Huatulco es tropical, cálido y húmedo, temperatura promedio de 27°'}]
     }
 
@@ -555,6 +567,7 @@ cancun = {
         'comidas' : comidaTipicaCancun,
         'restaurantes' : restaurantesCancun,
         'atractivos' : atractivosCancun,
+        'actividades' : "agregar aqui",
         'clima' : [{ 'nombre' : 'El clima en Cancun es tropical, cálido y húmedo, temperatura promedio de 26°'}]
     }
 
@@ -633,6 +646,7 @@ acapulco = {
         'comidas' : comidaTipicaAcapulco,
         'restaurantes' : restaurantesAcapulco,
         'atractivos' : atractivosAcapulco,
+        'actividades' : "agregar aqui",
         'clima' : [{ 'nombre' : 'En Acapulco, la temporada de lluvia es nublada, la temporada seca es parcialmente nublada y es muy caliente y opresivo durante todo el año. Durante el transcurso del año, la temperatura generalmente varía de 21 °C a 32 °C y rara vez baja a menos de 18 °C o sube a más de 33 °C.'}]
     }
 
