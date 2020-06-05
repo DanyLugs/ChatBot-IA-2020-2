@@ -488,7 +488,7 @@ actividadesHuatulco = [
     },
     {
         'nombre': 'Excursión 5 bahías: Viva la experiencia del esplendor coster de Huatulco en una excursión de 7 horas de excursión en barco de vela de la región de las bahías y playas vírgenes. En un pequeño grupo limitado a diez, navegará a la Bahía de Santa Cruz y Chahué, y se tumbará en la arena blanca de las playas vírgenes de Yerbabuena y La Entrega. '
-    }
+    },
     {
         'nombre': 'Recorrido montañoso: Experimente la belleza natural de Huatulco con esta aventura ecológica en las montañas de la Sierra Madre. Después de una recogida conveniente en el hotel, observe aves tropicales y reptiles, aprenda sobre la región con un guía local informativo y disfrute de las maravillosas aguas de Emerald Falls.'
     }
@@ -586,7 +586,7 @@ actividadesCancun = [
     },
     {
         'nombre': 'Fiesta en Cancun: Obtén un tour VIP de los clubes nocturnos de Cancún sin preocuparte por dónde ir o cómo llegar allí. Esta excursión a un club nocturno en Cancún maneja todos los detalles de su salida nocturna mientras lo mantiene seguro, para que pueda concentrarse en divertirse. Además, esta visita guiada le brinda entrada VIP en tres de los mejores clubes de Cancún, bebidas ilimitadas y servicio ilimitado de botellas en lugares seleccionados. '
-    }
+    },
     {
         'nombre': 'Recorrido turístico: Navegue desde Cancún a Isla Mujeres a bordo de un catamarán de tres pisos para un día de snorkel, baile de salsa y compras que incluye un desayuno continental, un bufé de fajitas frescas y barra libre por la tarde. Con una combinación de actividades divertidas y tiempo independiente, este emocionante crucero es una excelente manera de ver la hermosa costa caribeña desde el agua mientras se juega y se divierte con estilo.'
     }
@@ -680,7 +680,7 @@ actividadesAcapulco = [
     },
     {
         'nombre': 'Paseo en yate: No hay mejor manera de disfrutar de la belleza de la bahía de Acapulco que navegando en un yate por el océano Pacífico y un cóctel frutal en la mano. En este recorrido de 2,5 horas al atardecer o bajo la luna, podrá disfrutar del lujo de una barra libre y escuchar música en vivo mientras navega bajo el cielo colorido o repleto de estrellas. '
-    }
+    },
     {
         'nombre': 'Paseo todo incluido: Vea más de Acapulco en menos tiempo, en una visita turística para grupos pequeños, ideal para visitantes primerizos. En un pequeño grupo limitado a 15 personas, podrá marcar las principales atracciones de Acapulco, como Las Brisas, el acantilado con la Capilla de la Paz, la Bahía de Acapulco y los clavadistas de La Quebrada.'
     }
