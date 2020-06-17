@@ -3,7 +3,7 @@
 #
 #  Una implementación sencilla de un chatbot
 #  basado en intents y expresiones regulares
-#  por: 
+#  por:
 #  -Arenas Ayala Ramón
 #  -Lugo Cano Daniel
 #  -Millán Pimentel Óscar Fernando
@@ -14,6 +14,8 @@ import re
 import random
 import decimal
 from random import randrange
+
+from J48 import *
 
 class chatbot:
 
@@ -29,6 +31,7 @@ class chatbot:
         self.destino = 0
         self.ctx = 'deafult'
         self.user_input = ""
+        self.J48 = J48()
 
     def responder(self, user_input):
         '''
@@ -45,15 +48,20 @@ class chatbot:
         :rtype: str
         '''
         self.user_input = user_input
-        caso = self.encontrar_intent(user_input)
+        caso = self.encontrar_intent_regex(user_input)
         intent = caso.get('intent')
+        #Para estos casos al ser muy especificos consideramos que era mejor seguir rastreandolos con REGEX
+        if(not intent in ['reservar_hotel_personas','hotel_fecha_inicio','hotel_fecha_fin','estado']):
+            caso = self.encontrar_intent_j48(user_input)
+            intent = caso.get('intent')
+        
         self.identifica_destino(intent)
         self.identifica_contexto(intent) # Asignar contexto, es auxiliar para identificar ciertos casos particulares
 
         #print('Intent: ' + intent)
         #print('Contexto: ' + self.ctx)
         #print('Destino: ' + str(self.destino))
-       
+
         respuesta_final = self.get_respuesta(caso)
         dic_des = destinos.get(self.destino)
         if dic_des:
@@ -62,7 +70,7 @@ class chatbot:
                 respuesta_final = respuesta_final.replace('%1', nombre_des)
         return respuesta_final
 
-    def encontrar_intent(self, user_input):
+    def encontrar_intent_regex(self, user_input):
         '''
         Encuentra el caso o intent asociado en la base de conocimiento
 
@@ -78,14 +86,28 @@ class chatbot:
                     return caso
         return {}
 
+    def encontrar_intent_j48(self, user_input):
+        '''
+        Encuentra el caso o intent asociado en la base de conocimiento
+
+        :param str user_input: El texto escrito por el usuario
+        :return El diccionario que representa el caso o intent deseado
+        :rtype: str
+        '''
+        intent = self.J48.getIntent(user_input)
+        for caso in self.conocimiento:
+            if caso['intent'] == intent:
+                return caso
+        return {}
+
     def get_respuesta(self,caso):
         respuesta = ""
         intent = caso.get('intent')
-        if intent == 'desconocido' and self.ctx == 'reservar hotel':
+        if intent == 'desconocido' and self.ctx == 'reservar_hotel':
             return self.get_extra_contexto(intent)
-        if intent in ['bienvenida','desconocido','dar destinos'] or destinos.get(intent):     
+        if intent in ['bienvenida','desconocido','dar_destinos'] or destinos.get(intent):
             respuesta = random.choice(caso['respuesta'])
-            if intent == 'dar destinos':
+            if intent == 'dar_destinos':
                 dest = ""
                 for desti in destinos.values():
                     dest = dest + desti.get('nombre') + '\n'
@@ -107,14 +129,14 @@ class chatbot:
             self.destino = new_destino
 
     def identifica_contexto(self,intent):
-        if not (intent in ['confirmar','estado','reservar hotel personas','hotel fecha inicio','hotel fecha fin','desconocido']):
+        if not (intent in ['confirmar','estado','reservar_hotel_personas','hotel_fecha_inicio','hotel_fecha_fin','desconocido']):
             self.ctx = intent
-            
-        
+
+
 
     def get_extra_contexto(self, intent):
         ctx = self.ctx
-        if ctx == 'costo vuelo' and intent == 'estado':   
+        if ctx == 'costo_vuelo' and intent == 'estado':
             self.ctx = 'default'
             return 'El costo de vuelo redondo desde ese estado es de $'+ self.generar_cantidad() + ' (moneda nacional) \n ¿Te puedo ayudar con otra cosa?'
         if ctx in ['hoteles','clima'] :
@@ -127,7 +149,7 @@ class chatbot:
             else:
                 self.ctx = 'default'
                 return "Ok, regresando al principio..."
-        if ctx == 'reservar hotel':
+        if ctx == 'reservar_hotel':
             if intent == 'confirmar':
                 if self.user_input.lower() in ['si','sí']:
                     return 'Favor de seleccionar un hotel de la lista de hoteles en %1 (No escriba la palabra %1)' + '\n' + self.get_extra_destino('hoteles')
@@ -136,11 +158,11 @@ class chatbot:
                     return "Ok, regresando al principio..."
             if intent == 'desconocido':
                 for hotel in destinos.get(self.destino).get("hoteles"):
-                    if hotel.get('nombre').find(self.user_input)>=0:
+                    if simple_text(hotel.get('nombre')).find(self.user_input)>=0:
                         print(hotel.get('nombre'))
                         return "Genial! Por favor dime para cuantas personas es la reservacion"
                 return 'Lo siento ese hotel no fue detectado, asugurese de escribir de forma correcta el nombre del hotel (No escriba la palabra %1)\n' +  self.get_extra_destino('hoteles')
-            if intent == 'hotel fecha fin':
+            if intent == 'hotel_fecha_fin':
                 self.ctx = 'default'
                 return "..."
         return ""
@@ -152,7 +174,7 @@ class chatbot:
         :rtype str
         '''
         lista_resp = []
-        intent_inf = destinos.get(self.destino) 
+        intent_inf = destinos.get(self.destino)
         if intent_inf:
             lista_inf = intent_inf.get(intent)
             if lista_inf:
@@ -162,10 +184,10 @@ class chatbot:
                 if not respuesta:
                     return 'Por el momento no tenemos información sobre lo que busca disponible en %1'
                 return respuesta
-        return ''  
+        return ''
 
     def generar_cantidad(self):
-        return '{}'.format(decimal.Decimal(random.randrange(150000, 450000))/100)  
+        return '{}'.format(decimal.Decimal(random.randrange(150000, 450000))/100)
 
 #----------------------------------------------------------------------
 # Base de conocimiento
@@ -186,38 +208,38 @@ conocimiento = [
     {
         'intent': 'bienvenida',
         'regex': [
-            r'Hola (.*)',
-            r'.*Hola.*',
-            r'Hola',
-            r'.*Buen(a|o)s (días|tardes|noches).*'
+            r'hola (.*)',
+            r'.*hola.*',
+            r'hola',
+            r'.*buen(a|o)s (dias|tardes|noches).*'
         ],
         'respuesta': [
-            'Bienvenido, ¿En que te puedo ayudar?',
-            'Hola, ¿Cómo te puedo apoyar?'
+            'bienvenido, ¿en que te puedo ayudar?',
+            'hola, ¿como te puedo apoyar?'
         ]
     },
     {
-        'intent': 'dar destinos',
+        'intent': 'dar_destinos',
         'regex': [
-            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).*(destinos|lugares).*',
-            r'Dime a donde puedo viajar.*',
+            r'(que|cual|dime|dame|cuales|cuales|que|cual|quiero|a que| a que).*(destinos|lugares).*',
+            r'dime a donde puedo viajar.*',
             r'(.*)destinos(.*)'
         ],
         'respuesta': [
-            'Te daré la lista de destinos con los que contamos:',
-            'Estos son los lugares en los que te puedo ayudar a realizar una reservación completa:',
-            'Nuestros destinos son las playas más atractivas de México:'
+            'te dare la lista de destinos con los que contamos:',
+            'estos son los lugares en los que te puedo ayudar a realizar una reservacion completa:',
+            'nuestros destinos son las playas mas atractivas de mexico:'
         ]
     },
     {
         'intent': 'hoteles',
         'regex': [
-            r'(Que|Qué|Cuáles|Cuales|Quiero|Quisiera|Dime)(.*)hoteles(.*)',
+            r'(que|que|cuales|cuales|quiero|quisiera|dime)(.*)hoteles(.*)',
             r'.*hoteles.*',
-            r'.*Hoteles*'
+            r'.*hoteles*'
         ],
         'respuesta': [
-            'La lista de hoteles diponibles te la muestro a continuación:'
+            'la lista de hoteles diponibles te la muestro a continuacion:'
         ]
     },
     {
@@ -225,12 +247,12 @@ conocimiento = [
         'regex': [
             r'.*(restaurante|restaurantes).*',
             r'.*(restaurantes|restaurante).*',
-            r'(Donde|En que lugar|Algun lugar) .* comer.*'
+            r'(donde|en que lugar|algun lugar) .* comer.*'
         ],
         'respuesta': [
-            'Si quieres comer en un bonito lugar en %1, ¿puedo mostrarte los mejores restaurantes de la zona?',
-            '¿Quieres que te muestre una lista con variedad de lugares para comer delicioso en %1?'
-        ]    
+            'si quieres comer en un bonito lugar en %1, ¿puedo mostrarte los mejores restaurantes de la zona?',
+            '¿quieres que te muestre una lista con variedad de lugares para comer delicioso en %1?'
+        ]
     },
     {
         'intent': 'comidas',
@@ -242,144 +264,141 @@ conocimiento = [
         ],
         'respuesta': [
             '%1 ofrece gran variedad gastronomica, ¿gustas que te muestre la lista de comida tipica del lugar?',
-            '¿Quieres que te muestre una lista con variedad de comida tipica de %1?'
+            '¿quieres que te muestre una lista con variedad de comida tipica de %1?'
         ]
     },
     {
         'intent': 'atractivos',
         'regex': [
-            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .*',
-            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* lugares (historicos|históricos|importantes) .*',
-            r'(Que|Qué|Cual|Cuáles|Cuales|Donde|Dónde) .* (atractivo|atractivo) (turistico|turisticos) .*'
+            r'(que|que|cual|cuales|cuales|donde|donde) .* lugares (historicos|historicos|importantes) .*',
+            r'(que|que|cual|cuales|cuales|donde|donde) .* lugares (historicos|historicos|importantes) .*',
+            r'(que|que|cual|cuales|cuales|donde|donde) .* (atractivo|atractivo) (turistico|turisticos) .*'
         ],
         'respuesta': [
-            '¿Quieres que te muestre una lista de lugares increibles para visitar en %1'
+            '¿quieres que te muestre una lista de lugares increibles para visitar en %1'
         ]
     },
     {
         'intent': 'actividades',
         'regex': [
-            r'(Que|Qué|Cuáles|Cuales|Quiero|Quisiera|Dime)(.*)actividades(.*)',
+            r'(que|que|cuales|cuales|quiero|quisiera|dime)(.*)actividades(.*)',
             r'.*actividades.*',
-            r'.*Actividades*'
+            r'.*actividades*'
         ],
         'respuesta': [
-            '¿Quieres que te muestre una lista de actividades increibles por hacer en %1'
+            '¿quieres que te muestre una lista de actividades increibles por hacer en %1'
         ]
     },
     {
         'intent': 'clima',
         'regex': [
-            r'(Qué|Cuál|Dime|Dame|Cuáles|Cuales|Que|Cual|Quiero|A que| A qué).*(clima|tiempo).*',
+            r'(que|cual|dime|dame|cuales|cuales|que|cual|quiero|a que| a que).*(clima|tiempo).*',
             r'.*clima.*'
         ],
         'respuesta': [
-            'A continuación una breve descripción del clima de %1'
+            'a continuacion una breve descripcion del clima de %1'
         ]
     },
     {
-        'intent': 'hotel fecha inicio',
+        'intent': 'hotel_fecha_inicio',
         'regex': [
-            r'[\d]{1,2} [ADFJMNOS]\w* [\d]{4}'
+            r'[\d]{1,2} [adfjmnos]\w* [\d]{4}'
         ],
         'respuesta': [
-            'Muy bien, ahora indicame cuantos días quieres quedarte en tu destino de la forma: "# dias"'
+            'muy bien, ahora indicame cuantos dias quieres quedarte en tu destino de la forma: "# dias"'
         ]
     },
     {
-        'intent': 'hotel fecha fin',
+        'intent': 'hotel_fecha_fin',
         'regex': [
             r'.*dias'
         ],
         'respuesta': [
-            'Perfecto tu reservación se ha hecho satisfacotiramente \n ¿Puedo ayudarte con algo más?',
-            'Muy bien, genero la reservación de hotel para esas fechas en ese destino. ¿Te puedo ayudar en algo más?'
+            'perfecto tu reservacion se ha hecho satisfacotiramente \n ¿puedo ayudarte con algo mas?',
+            'muy bien, genero la reservacion de hotel para esas fechas en ese destino. ¿te puedo ayudar en algo mas?'
         ]
     },
     {
-        'intent': 'reservar hotel',
+        'intent': 'reservar_hotel',
         'regex': [
-            r'Quiero(.*)hotel(.*)',
-            r'Quisiera(.*)hotel(.*)'
+            r'quiero(.*)hotel(.*)',
+            r'quisiera(.*)hotel(.*)'
         ],
         'respuesta': [
-            '¿Quieres realizar una reservación para un hotel en %1?',
-            '¿Deseas que haga una reservación para un hotel en %1?'
+            '¿quieres realizar una reservacion para un hotel en %1?',
+            '¿deseas que haga una reservacion para un hotel en %1?'
         ]
     },
     {
-        'intent': 'reservar hotel personas',
+        'intent': 'reservar_hotel_personas',
         'regex': [
-            r'Para (1|2|3|4|5|6|7|8|9|10)(.*)',
+            r'para (1|2|3|4|5|6|7|8|9|10)(.*)',
             r'(1|2|3|4|5|6|7|8|9|10)(.*)',
             r'(1|2|3|4|5|6|7|8|9|10)'
         ],
         'respuesta': [
-            'Excelente, Ahora indicame la fecha de salida en formato DD MES AAAA'
+            'excelente, ahora indicame la fecha de salida en formato dd mes aaaa'
         ]
     },
     {
-        'intent': 'costo vuelo',
+        'intent': 'costo_vuelo',
         'regex': [
             r'(precio|costo) .*vuelo.*',
-            r'(Cuanto|Cuánto) .* vuelo.*',
-            r'(Cuanto|Cuánto) .* vuelo .*',
+            r'(cuanto|cuanto) .* vuelo.*',
+            r'(cuanto|cuanto) .* vuelo .*',
             r'(precio|costo) .* vuelo .*'
         ],
         'respuesta': [
-            'Para decirte el costo, dime ¿desde qué estado de la republica quieres viajar?',
-            'Para indicarte el precio podrías decirme por favor ¿de qué estado de la republica quiere viajar?'
-        ]    
+            'para decirte el costo, dime ¿desde que estado de la republica quieres viajar?',
+            'para indicarte el precio podrias decirme por favor ¿de que estado de la republica quiere viajar?'
+        ]
     },
     {
         'intent': 'estado',
         'regex': [
-            r'(Aguascalientes|AGS|Baja California|BajaCAlifornia SUr|Campeche|Chiapas|Chihuahua|Ciudad de México|Ciudad de Mexico|DF|CDMX|Coahuila|Colima|Durango|Guanajuato|Guerrero|Hidalgo|Jalisco)',
-            r'(Michoacán|Estado de Mexico|Estado de México|Morelos|Nayarit|Nuevo León|Monterrey|Oaxaca|Puebla|Querétaro|Queretaro|Quintana Roo|San Luis Potosí|San Luis Potosi|Sinaloa|Sonora|Tabasco|Tamapulipas|Tlaxcala|Veracruz|Yucatán|Zacatecas)'
+            r'(aguascalientes|baja california|bajacalifornia sur|campeche|chiapas|chihuahua|ciudad de mexico|ciudad de mexico|df|cdmx|coahuila|colima|durango|guanajuato|guerrero|hidalgo|jalisco)',
+            r'(michoacan|estado de mexico|estado de mexico|morelos|nayarit|nuevo leon|monterrey|oaxaca|puebla|queretaro|queretaro|quintana roo|san luis potosi|san luis potosi|sinaloa|sonora|tabasco|tamapulipas|tlaxcala|veracruz|yucatan|zacatecas)'
         ],
         'respuesta': [
-            '' # A priori no se puede dar una respuesta, se debe considerar el contexto (ver la función self.da_respuesta_apropiada())
+            '' # a priori no se puede dar una respuesta, se debe considerar el contexto (ver la funcion self.da_respuesta_apropiada())
         ]
     },
     {
         'intent': 'confirmar',
         'regex': [
-            r'Sí',
-            r'Si',
             r'si',
-            r'sí',
-            r'No',
-            r'No sé',
-            r'No se'
+            r'claro',
+            r'no',
+            r'no se'
         ],
         'respuesta': [
-            '' # A priori no se puede dar una respuesta, se debe considerar el contexto (ver la función self.da_respuesta_apropiada())
+            '' # a priori no se puede dar una respuesta, se debe considerar el contexto (ver la funcion self.da_respuesta_apropiada())
         ]
     },
     {
         'intent': 'huatulco',
         'regex': [
-            r'Quiero (.*) Huatulco',
-            r'Quisiera (.*) Huatulco',
-            r'.*Huatulco.*'
+            r'quiero (.*) huatulco',
+            r'quisiera (.*) huatulco',
+            r'.*huatulco.*'
         ],
         'respuesta': respuesta_elegir_destino
     },
     {
         'intent': 'cancun',
         'regex': [
-            r'Quiero (.*) Cancun',
-            r'Quisiera (.*) Cancun',
-            r'.*Cancun.*'
+            r'quiero (.*) cancun',
+            r'quisiera (.*) cancun',
+            r'.*cancun.*'
         ],
         'respuesta': respuesta_elegir_destino
     },
     {
         'intent': 'acapulco',
         'regex': [
-            r'Quiero (.*) Acapulco',
-            r'Quisiera (.*) Acapulco',
-            r'.*Acapulco.*'
+            r'quiero (.*) acapulco',
+            r'quisiera (.*) acapulco',
+            r'.*acapulco.*'
         ],
         'respuesta': respuesta_elegir_destino
     },
@@ -389,13 +408,13 @@ conocimiento = [
             r'.*'
         ],
         'respuesta': [
-            'Disculpa, no comprendí lo que dices',
-            'Podrías reformular tu pregunta por favor'
-            '¿Puedes decir lo mismo con otras palabras?'
+            'disculpa, no comprendi lo que dices',
+            'podrias reformular tu pregunta por favor'
+            '¿puedes decir lo mismo con otras palabras?'
         ]
     },
-       
-  
+
+
 ]
 
 #----------------------------------------------------------------------
@@ -703,10 +722,36 @@ destinos = {
     3 : acapulco,
     }
 
+
+def simple_text(entrada):
+    '''
+    Devuelve la cadena de entrada sin signos, sin acentos y en minusculas
+
+    :param str entrada: Texto al cual se modificará
+    :return text sin signos ni acentos y en minusculas
+    :rtype str
+    '''
+    text = entrada.lower()
+    text = text.replace(',', '')
+    text = text.replace('?', '')
+    text = text.replace('!', '')
+    text = text.replace('á', 'a')
+    text = text.replace('é', 'e')
+    text = text.replace('í', 'i')
+    text = text.replace('ó', 'o')
+    text = text.replace('ú', 'u')
+    text = text.replace('ñ', 'ni')
+
+    return text
+
 #----------------------------------------------------------------------
 #  Interfaz de texto
 #----------------------------------------------------------------------
 def command_interface():
+
+    asistente = chatbot()
+
+    print('')
     print('Hola soy Rod, tu asistente personal de viajes.')
     print('-'*72)
     print('Nos especializamos en las principales playas de México:')
@@ -717,15 +762,16 @@ def command_interface():
     print('¿En que te puedo apoyar?')
 
     input_usuario = ''
-    asistente = chatbot()
+
     while input_usuario != 'salir':
         try:
             input_usuario = input('> ')
-            #print(destinos.get(1))
         except EOFError:
             print('Saliendo...')
+            jvm.stop()
         else:
-            print(asistente.responder(input_usuario))
-
+            print(asistente.responder(simple_text(input_usuario)))
+    print('Saliendo...')
+    jvm.stop()
 if __name__ == "__main__":
     command_interface()
